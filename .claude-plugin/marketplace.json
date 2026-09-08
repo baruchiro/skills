@@ -1,0 +1,14 @@
+{
+  "name": "skills",
+  "owner": {
+    "name": "baruchiro",
+    "email": "baruchiro@gmail.com"
+  },
+  "plugins": [
+    {
+      "name": "personal",
+      "source": "./personal",
+      "description": "Baruch's personal Claude Code skills"
+    }
+  ]
+}
