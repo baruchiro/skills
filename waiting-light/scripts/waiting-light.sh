@@ -82,6 +82,29 @@ set_flag()   { mkdir -p "$STATE_DIR" && : >"$STATE_DIR/$1.$2"; }
 clear_flag() { rm -f "$STATE_DIR/$1.$2" 2>/dev/null || true; }
 has_flag()   { [ -e "$STATE_DIR/$1.$2" ]; }
 
+# Read the boolean's CURRENT state from HA rather than trusting what we last
+# pushed. The kiosk dashboard has a chip that turns it off by hand, so the local
+# cache can be stale; treating the cache as authoritative would make the next
+# real transition look like a no-op and silently swallow it.
+ha_current_state() {
+  local body
+  body="$(curl -sS --max-time 3 \
+    -H "Authorization: Bearer ${HA_TOKEN}" \
+    "${HA_URL%/}/api/states/${HA_ENTITY}" 2>>"$STATE_DIR/errors.log")" || return 1
+  [ -n "$body" ] || return 1
+  if command -v jq >/dev/null 2>&1; then
+    printf '%s' "$body" | jq -r '.state // empty' 2>/dev/null
+  elif command -v python3 >/dev/null 2>&1; then
+    printf '%s' "$body" | python3 -c 'import json, sys
+try:
+    print(json.load(sys.stdin).get("state", ""))
+except Exception:
+    pass' 2>/dev/null
+  else
+    return 1
+  fi
+}
+
 push_to_ha() {
   local want="$1" service
   [ "$want" = "on" ] && service="turn_on" || service="turn_off"
@@ -123,9 +146,17 @@ sync_ha() {
   done
   shopt -u nullglob
 
-  local prev=""
-  [ -r "$STATE_DIR/aggregate" ] && prev="$(cat "$STATE_DIR/aggregate" 2>/dev/null)"
-  [ "$want" = "$prev" ] && return 0
+  local prev
+  prev="$(ha_current_state)"
+  if [ -z "$prev" ]; then
+    # HA unreachable or unparseable - fall back to what we last pushed so a
+    # blip does not turn every hook into a redundant write.
+    [ -r "$STATE_DIR/aggregate" ] && prev="$(cat "$STATE_DIR/aggregate" 2>/dev/null)"
+  fi
+  if [ "$want" = "$prev" ]; then
+    printf '%s' "$want" >"$STATE_DIR/aggregate"
+    return 0
+  fi
 
   # Only record the new value if HA actually accepted it, so a failed call
   # retries on the next hook rather than silently desyncing.

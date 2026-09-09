@@ -63,9 +63,13 @@ plugin does not hook.
 ## How it behaves
 
 - State lives in `~/.claude/waiting-light/` as `<session_id>.armed` /
-  `<session_id>.waiting`, plus an `aggregate` file holding the last value pushed
-  to HA. The boolean is on if **any** armed session is waiting, and HA is called
-  only on a real transition.
+  `<session_id>.waiting`. The boolean is on if **any** armed session is waiting,
+  and HA is only written when its **actual** state differs from that. The
+  entity's current state is read back before each write rather than trusting a
+  local cache, so turning the boolean off by hand (a dashboard button, the HA
+  app) cannot make the next real transition look like a no-op and swallow it.
+  The `aggregate` file keeps the last pushed value purely as a fallback for when
+  HA is unreachable, and as something `status` can show you.
 - A failed HA call is logged to `~/.claude/waiting-light/errors.log` and does
   **not** advance `aggregate`, so the next hook retries and heals the state.
 - A session killed without `SessionEnd` has its flags dropped after 24h rather
