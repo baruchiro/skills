@@ -10,6 +10,12 @@
       "source": "./personal",
       "description": "Baruch's personal Claude Code skills",
       "version": "0.1.0"
+    },
+    {
+      "name": "waiting-light",
+      "source": "./waiting-light",
+      "description": "Ambient Home Assistant signal when a Claude Code session is waiting on you",
+      "version": "0.1.0"
     }
   ]
 }
