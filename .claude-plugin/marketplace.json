@@ -6,9 +6,9 @@
   },
   "plugins": [
     {
-      "name": "personal",
-      "source": "./personal",
-      "description": "Baruch's personal Claude Code skills",
+      "name": "baruchiro",
+      "source": "./baruchiro",
+      "description": "Baruch Odem's personal Claude Code skills and agents",
       "version": "0.1.0"
     },
     {

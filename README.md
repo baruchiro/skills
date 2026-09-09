@@ -10,11 +10,11 @@ Personal Claude Code skills marketplace.
 
 | Plugin | What it gives you |
 |---|---|
-| `personal` | Baruch's personal skills and agents |
+| `baruchiro` | Baruch's personal skills and agents |
 | `waiting-light` | Flips a Home Assistant `input_boolean` while a session is waiting on you, so a light can signal it. See [waiting-light/README.md](waiting-light/README.md) |
 
 ```
-/plugin install personal@skills
+/plugin install baruchiro@skills
 /plugin install waiting-light@skills
 ```
 
@@ -22,13 +22,28 @@ Personal Claude Code skills marketplace.
 
 ```
 .claude-plugin/marketplace.json   # marketplace catalog
-personal/
+baruchiro/
   .claude-plugin/plugin.json      # plugin manifest
-  skills/                         # SKILL.md files live here
   agents/                         # subagent definitions
+  skills/                         # SKILL.md files live here
 waiting-light/
   .claude-plugin/plugin.json
   hooks/hooks.json                # Stop / Notification / UserPromptSubmit / SessionEnd
   commands/                       # /waiting-light
   scripts/                        # the state machine
 ```
+
+## Contents — `baruchiro`
+
+### Skills
+
+| Skill | What it does |
+|---|---|
+| `pr-walkthrough` | Review a PR (or matching PRs across repos) interactively, chunk by chunk |
+| `test-quality-rubric` | Judge whether an existing unit test earns its keep — Delete, Merge or Rewrite |
+
+### Agents
+
+| Agent | What it does |
+|---|---|
+| `code-review-publish` | Post a completed review's findings to a GitHub PR as inline comments |
