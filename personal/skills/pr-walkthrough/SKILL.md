@@ -78,7 +78,7 @@ scripts/store.sh comment <state-file> <chunk-id> <path> <line> "<body>"
 scripts/store.sh status <state-file>                             # {total, shown, remaining, comments}
 ```
 
-Present what `next` returns: flow position, the diff, a couple sentences of context — skip the prose entirely for a trivial chunk (version bump, single doc line). If `collapsed` is true (the bundled test chunk), show only its `summary` line, not the diff — expand it only if the user asks to see the tests. Stop and wait — don't call `next` again until the user says "next"/"continue" or asks something.
+Present what `next` returns: flow position, the diff, a couple sentences of context — skip the prose entirely for a trivial chunk (version bump, single doc line). **Show the chunk's `diff` in full, verbatim** — every line the store returned, in one fenced block. Never quote a few interesting lines, never elide with `...`, never paraphrase a hunk into prose, and never trim context lines to save space: chunks are already capped at 10-30 lines precisely so the whole thing fits, and a partial diff silently hides the code the user is supposed to be reviewing. Commentary goes after the diff, never in place of part of it. If `collapsed` is true (the bundled test chunk), show only its `summary` line, not the diff — expand it only if the user asks to see the tests. Stop and wait — don't call `next` again until the user says "next"/"continue" or asks something.
 
 ### 4. Handle interruptions in place
 
@@ -95,6 +95,7 @@ When the user is done (or asks to wrap up early): for each repo, run `scripts/st
 | Chunk size | 10-30 diff lines |
 | Scope per chunk | one concept |
 | Ordering | by flow, not by file/repo |
+| Diff display | whole chunk diff, verbatim — never excerpted |
 | Code changes | never — comments only |
 | Reading state | always via `store.sh`, never the raw file |
 | Test files | bundled into one collapsed summary chunk, not walked individually |
@@ -104,6 +105,7 @@ When the user is done (or asks to wrap up early): for each repo, run `scripts/st
 - Chunking by file order instead of tracing the actual flow first — do step 2's flow-tracing before splitting
 - Fetching diffs and building the chunk plan in the main conversation — delegate to a subagent so raw diffs don't fill context
 - Reading the whole state file with `cat`/`jq` ad hoc instead of `store.sh` — defeats the point of the store
+- Showing only part of a chunk's diff — excerpting the "interesting" lines, or summarizing a hunk instead of pasting it
 - Posting review comments without confirming first
 - Ignoring a task reference in the PR description — it's often the only place the *why* is written down
 - Walking test files one by one like source chunks — collapse them, expand only on request
