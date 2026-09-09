@@ -11,6 +11,8 @@ Drains unresolved, actionable review threads on one or more PRs, in parallel, wi
 
 "Review comments" means inline code-review threads (the ones with resolved/unresolved state) — not general PR conversation/issue comments, which have no resolution state. Stay scoped to threads unless the user separately asks about the PR's conversation tab.
 
+**Related, and the boundary between them:** the `code-review-publish` agent in this plugin posts a completed review's findings *onto* a PR as new inline comments — it is where threads come from, and it deliberately never resolves or replies to one. This skill is the other end: it drains the threads that already exist. Both call `mcp__GitHub__pull_request_review_write`, so keep the methods straight — `create`/`submit_pending` belong to the publisher, `resolve_thread`/`unresolve_thread` belong here.
+
 ## Step 1: Fetch actionable threads (script, not agent judgment)
 
 Run `fetch-actionable-threads.sh OWNER REPO PR_NUMBER` (in this skill's directory) for each PR. It calls `gh api graphql` directly (paginated) and returns only threads that need action *right now* — no LLM filtering, no risk of miscounting on a long thread list. A thread is included by default only if **all** of:
@@ -61,7 +63,7 @@ Group the actionable threads into small clusters — same file, same feature are
 
 Send all group-handling agents in a single message with multiple Agent tool calls (plus the CI-check agents from Step 4 — everything in Step 3 and 4 runs in the same batch). Each agent's prompt must be self-contained: repo, PR number, and for every thread in its group — the thread ID, the comment ID, the file/line, the full comment body(ies) (including prior back-and-forth, since a thread can hold a multi-comment conversation), and this instruction:
 
-> For each thread: either implement the requested code change, or reply via `mcp__GitHub__add_reply_to_pull_request_comment` (needs the numeric comment ID) with an answer. End the reply body with this exact line on its own: `<!-- resolving-pr-review-comments:agent-reply -->` — it's invisible when rendered on GitHub, and it's how the fetch script tells your replies apart from the human's when both of you comment on the same PR. Then apply the resolve rule below and use `mcp__GitHub__pull_request_review_write` with `method: resolve_thread` (needs the thread ID) only if it's earned.
+> For each thread: either implement the requested code change, or reply via `mcp__GitHub__add_reply_to_pull_request_comment` (needs the numeric comment ID) with an answer. End the reply body with this exact line on its own: `<!-- resolving-pr-review-comments:agent-reply -->` — it's invisible when rendered on GitHub, and it's how the fetch script tells your replies apart from the human's when both of you comment on the same PR. The marker's single source of truth is `shared/agent-reply-marker.txt` in this plugin (the fetch script reads it at runtime, and `code-review-publish` appends the same string to every comment it posts); if the line above ever disagrees with that file, the file wins. Then apply the resolve rule below and use `mcp__GitHub__pull_request_review_write` with `method: resolve_thread` (needs the thread ID) only if it's earned.
 
 **Resolve rule:** resolve a thread only if your reply (or code change) added no new information or decision the reviewer still needs to see. If your reply requires their judgment or introduces something new (a design tradeoff, an open question, "say the word if you want X instead"), leave it unresolved — reviewer's call, not yours.
 

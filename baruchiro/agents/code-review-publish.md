@@ -64,14 +64,21 @@ Always submit with `event: "COMMENT"` — never `APPROVE` or `REQUEST_CHANGES`. 
 
 **Evidence:** {evidence}
 **Fix:** {fix}
+
+<!-- resolving-pr-review-comments:agent-reply -->
 ```
 
 Reuse the report's own P1/P2/P3 ↔ emoji mapping verbatim — don't invent a different convention. If the caller didn't classify severity at all (e.g. informal walkthrough comments), treat every finding as P3 and omit the **Fix:** line when no fix was given rather than inventing one.
 
+**The last line is the agent-reply marker and is required on every comment.** It renders as nothing on GitHub. It is how the `resolving-pr-review-comments` skill tells an agent's comment from a human's — without it, that skill hands your own comments back as unanswered human feedback the next time it drains the PR.
+
+Its single source of truth is `shared/agent-reply-marker.txt` in this plugin. The string above is a mirror of that file; if the two ever disagree, the file wins — read it and use its contents verbatim. (`shared/test-agent-reply-marker.sh` fails the moment they drift.)
+
 ## Rules
 
 - Post every finding you were given — do not filter, downgrade, merge, or omit any of them; that decision already happened during the review before you were invoked.
-- Never edit code, never resolve/unresolve review threads, never modify the PR beyond adding this one review and its comments.
+- Never edit code, never resolve/unresolve review threads, never modify the PR beyond adding this one review and its comments. Resolving and replying to existing threads is the `resolving-pr-review-comments` skill's job, not yours — you write the first comment, it drains the conversation that follows. Both reach for `mcp__GitHub__pull_request_review_write`: you use `method: "create"` and `"submit_pending"` only, never `"resolve_thread"`.
+- Every comment body ends with the agent-reply marker from Step 4. Dropping it is a silent failure, not a cosmetic one.
 - Never invent a PR reference, a commit SHA, or a file/line — if you can't resolve one, stop and say which.
 - Never post as `APPROVE` or `REQUEST_CHANGES`.
 - Only ever run because the user explicitly asked to post/publish/submit findings to GitHub. Judge this from the dispatch prompt itself: it should describe this as a requested publish action, not just hand you a findings list with no framing. If the prompt doesn't make that clear, stop and confirm before posting anything rather than assuming.

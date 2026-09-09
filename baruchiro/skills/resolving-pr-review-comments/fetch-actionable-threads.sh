@@ -27,7 +27,9 @@ for arg in "$@"; do
   esac
 done
 
-AGENT_MARKER='<!-- resolving-pr-review-comments:agent-reply -->'
+MARKER_FILE="$SCRIPT_DIR/../../shared/agent-reply-marker.txt"
+[ -f "$MARKER_FILE" ] || { echo "Missing $MARKER_FILE — the agent-reply marker is shared with code-review-publish and must not be hardcoded here." >&2; exit 1; }
+AGENT_MARKER="$(cat "$MARKER_FILE")"
 
 query='
 query($owner:String!, $repo:String!, $pr:Int!, $cursor:String) {
