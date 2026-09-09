@@ -4,18 +4,19 @@
     "name": "baruchiro",
     "email": "baruchiro@gmail.com"
   },
+  "description": "Baruch Odem's Claude Code plugins: PR review workflow skills and a Home Assistant waiting light.",
   "plugins": [
     {
       "name": "baruchiro",
       "source": "./baruchiro",
       "description": "Baruch Odem's personal Claude Code skills and agents",
-      "version": "0.1.0"
+      "version": "0.2.0"
     },
     {
       "name": "waiting-light",
       "source": "./waiting-light",
       "description": "Ambient Home Assistant signal when a Claude Code session is waiting on you",
-      "version": "0.1.0"
+      "version": "0.1.1"
     }
   ]
 }
