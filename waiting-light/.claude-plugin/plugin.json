@@ -1,6 +1,6 @@
 {
   "name": "waiting-light",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Ambient Home Assistant signal when a Claude Code session is waiting on you",
   "author": {
     "name": "baruchiro",

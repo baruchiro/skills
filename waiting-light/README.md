@@ -48,6 +48,7 @@ Restart the session after installing so the hooks load.
 | `Stop` hook with no blocking background task | The turn ended and nothing is still running — your turn. |
 | `Notification` hook, `permission_prompt` matcher | Blocked on an approve/deny dialog. `Stop` does **not** fire for this, so without it a session stuck on a permission ask would stay dark. |
 | `UserPromptSubmit` | You answered — clear. |
+| `SessionStart` | Session resumed (e.g. `claude --resume`) — clear, since you're back before typing anything. |
 | `SessionEnd` | Clear and disarm, so the signal can't get stuck on. |
 
 The `Stop` payload carries `background_tasks[]`, already filtered by Claude Code

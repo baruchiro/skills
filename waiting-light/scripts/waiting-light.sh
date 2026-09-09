@@ -212,6 +212,15 @@ cmd_hook_prompt() {
   sync_ha_locked
 }
 
+cmd_hook_session_start() {
+  local parsed sid
+  parsed="$(parse_hook_stdin)" || return 0
+  sid="$(sanitize_sid "${parsed%%$'\t'*}")"
+  [ -n "$sid" ] || return 0
+  clear_flag "$sid" waiting
+  sync_ha_locked
+}
+
 cmd_hook_session_end() {
   local parsed sid
   parsed="$(parse_hook_stdin)" || return 0
@@ -267,6 +276,7 @@ cmd_status() {
 }
 
 case "${1:-status}" in
+  hook-session-start) cmd_hook_session_start ;;
   hook-stop)        cmd_hook_stop ;;
   hook-notify)      cmd_hook_notify ;;
   hook-prompt)      cmd_hook_prompt ;;
