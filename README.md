@@ -40,6 +40,7 @@ waiting-light/
 | Skill | What it does |
 |---|---|
 | `pr-walkthrough` | Review a PR (or matching PRs across repos) interactively, chunk by chunk |
+| `resolving-pr-review-comments` | Drain unresolved review threads on your own PRs — fetch, reply, resolve, check CI |
 | `test-quality-rubric` | Judge whether an existing unit test earns its keep — Delete, Merge or Rewrite |
 
 ### Agents
