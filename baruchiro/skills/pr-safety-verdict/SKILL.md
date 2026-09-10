@@ -1,6 +1,6 @@
 ---
 name: pr-safety-verdict
-description: Give a fast, reviewer-facing verdict on whether a PR or diff in any repo is safe to merge — SAFE, RISKY, or BREAKING — instead of a long research writeup. Checks for (1) unnecessary/stale comments, (2) whether existing working code paths still behave identically (backward compatibility), (3) whether a new feature added alongside an existing working flow degrades gracefully instead of risking that flow on failure, and (4) repo hygiene — stray files, unsolicited meta files, blocking I/O in async code, unvalidated file-path inputs, placeholder tests, and a schema that doesn't enforce what its own docs claim. Use this whenever the user asks to review a PR, look at a diff, check a pull request for breaking changes, asks "is this safe to merge/approve", pastes a GitHub PR URL/number and asks what to watch out for, or says they don't have time to dig into a PR themselves and just want the important part. Trigger even if they only give a PR number or link with no other instructions — that alone means they want this fast verdict, not an essay.
+description: Give a fast, reviewer-facing verdict on whether a PR or diff in any repo is safe to merge — SAFE, RISKY, or BREAKING — instead of a long research writeup. Checks for (1) unnecessary/stale comments, (2) whether existing working code paths still behave identically (backward compatibility), (3) whether a new feature added alongside an existing working flow degrades gracefully instead of risking that flow on failure, and (4) repo hygiene — stray files, unsolicited meta files, blocking I/O in async code, unvalidated file-path inputs, placeholder tests, and a schema that doesn't enforce what its own docs claim. Use this once the user has decided a PR is actually worth reviewing — after `pr-readiness-check` says READY, or because they're choosing to review it anyway. Trigger directly on "is this safe to merge/approve", "review this diff", "check this PR for breaking changes", or a bare PR number/link handed over specifically for a code verdict. If the user is instead asking whether a PR is *worth* looking at right now — "is this ready", "what's the status", "has X been addressed" — that's `pr-readiness-check`, not this skill; don't run this one first on a PR you haven't been told is worth reviewing.
 ---
 
 # PR Safety Verdict
@@ -11,6 +11,8 @@ The output is a verdict, not a report. If you catch yourself writing multiple pa
 
 This is a generic, repo-agnostic version of the methodology — it works on any codebase. A repo can still carry its own specialized variant (e.g. one tuned to a particular domain's failure modes) as a project-scoped skill; prefer that one when it exists and this one otherwise.
 
+**This skill doesn't gate itself on whether the PR is worth reviewing right now** — it assumes that call already happened, either via `pr-readiness-check` or the user's own judgment ("review this anyway"). It doesn't fetch conversation history or CI status, and it doesn't report on staleness. If you land here without knowing whether the PR is stalled or its prior review comments were ever addressed, run `pr-readiness-check` first — that's a separate, cheaper question with its own skill, not a preamble to bolt onto this one.
+
 ## Step 1 — Get the actual diff
 
 Don't review from the PR title/description alone — authors describe intent, not always the resulting control flow. Fetch:
@@ -18,23 +20,8 @@ Don't review from the PR title/description alone — authors describe intent, no
 - Enough of the *surrounding* unchanged code (`get_file_contents` at the base ref, or `git show <base>:<path>`) to see what a changed function looked like **before**, not just the `+`/`-` lines in isolation. A three-line diff hunk is frequently only interpretable by seeing the `if/else` it's embedded in.
 - If the change touches a core data/control path, check whether a test file exists for it and whether the diff touches test expectations too (see Check 1 below for why that matters).
 - If this repo documents a convention for companion artifacts on a change (a changelog fragment, a changeset, a migration file) — check its `CONTRIBUTING.md`/`CLAUDE.md`/`README.md` once per review, don't assume one exists.
-- If it's a real PR (not a bare diff/local branch), a quick glance at CI status and existing review comments — these are nearly free to fetch and change what "safe to approve" actually means right now: a RISKY-but-otherwise-fine diff with red CI or an unresolved reviewer objection isn't ready regardless of what the code analysis says. Skip this for a diff with no PR behind it (nothing to fetch).
 
 If given only a PR number/URL, resolve owner/repo from the current git remote unless told otherwise.
-
-### Conversation state — is this even ready to be (re-)reviewed?
-
-Before spending effort on the checks below, work out where the PR actually sits in its own conversation. A full fresh review is wasted effort — and misleading to the reviewer — if the PR is simply sitting idle waiting on the author, or if a prior reviewer's ask was never actually addressed despite the branch looking "active."
-
-Fetch `get_comments`, `get_review_comments` (threads), and `get_commits`, and line them up by timestamp. Then:
-
-1. **Filter out noise.** Discard bot housekeeping (stale-bot, labeler comments), the PR author's own comments (pings, "any update?", apologies for delay), and reactions/threads with no actionable ask. What's left is the substantive asks: a maintainer/collaborator requesting a change (split the PR, rebase, fix X, provide evidence for Y), or a review-bot/human finding on a specific line.
-
-2. **Find the most recent substantive ask and compare its timestamp to the most recent commit:**
-   - **No commit since that ask** → say so plainly, and say it *first*, before anything else. This is a strong signal the PR is stalled waiting on the author, not something to hand back a fresh SAFE/RISKY/BREAKING verdict on as if it just landed. Name who asked, what they asked for, and since when nothing has moved.
-   - **Commits exist since that ask** → don't assume they're a response just because they exist. Check whether the new commits actually touch what was asked (same file/function for a code fix; an actual rebase for a "please rebase" ask; the PR literally split for a "split this into N PRs" ask — check `mergeable_state` too, since "please rebase" isn't satisfied by unrelated new commits on top of a still-unresolved conflict). If the new activity is unrelated to the ask, say so explicitly: the ask is still open despite the branch looking active. If it does address the ask, treat it as being actively iterated on and proceed normally.
-
-3. **Apply the same logic per review-comment thread**, not just to the top-level conversation. GitHub marks a thread `is_outdated` once the diff at that location has changed since the comment — but that only means the code moved, not that the concern was resolved. Read the current code at that location yourself and decide whether it actually addresses the finding, rather than trusting `is_outdated`/`is_resolved` at face value. A thread can be simultaneously "outdated" and still perfectly valid (the code moved but the same bug is still there), or outdated and genuinely fixed by later work — only reading the current lines tells you which.
 
 ## Step 2 — Run the four checks
 
@@ -92,9 +79,7 @@ These are checks about the diff itself rather than the runtime behavior it intro
 
 ## Step 3 — Output
 
-Keep this to what a reviewer reads in ten seconds plus a skimmable list. If the conversation-state check above found that nothing has changed since the last substantive reviewer ask, lead with that — one or two plain-text sentences, before the verdict block, naming who asked, for what, and since when. That's a process fact, not a code finding, so it never becomes a bullet inside the verdict. Still produce the verdict block after it if the code itself is worth characterizing, but don't let it read like a routine "go ahead and merge" — the staleness is the headline.
-
-Otherwise, use exactly this shape:
+Keep this to what a reviewer reads in ten seconds plus a skimmable list. Use exactly this shape:
 
 ```
 ## Verdict: SAFE | RISKY | BREAKING
@@ -110,7 +95,6 @@ Otherwise, use exactly this shape:
 Rules for this output:
 - Every bullet is tagged with which check it came from (`comments`, `compat`, `feature-safety`, `hygiene`) and anchored to a real `file:line` — a finding the reviewer can't jump to isn't actionable. A stray/unsolicited file with no meaningful line still gets a bullet; use its path with no line number.
 - Omit a section's bullets entirely if that check found nothing — don't write "No issues found" as a bullet, just leave it out.
-- The verdict is for the *diff as a whole*: pick BREAKING if any single finding is breaking, else RISKY if any finding is risky, else SAFE. Hygiene findings never push the verdict past RISKY on their own (a stray file or a placeholder test is a cleanup ask, not a compatibility break) unless the hygiene finding is itself a security boundary violation, in which case treat it like a compat/feature-safety finding of the same severity. The verdict reflects the code, not the process — CI/review-thread status never changes it, that's separate information about whether *this* is a good time to act on it.
-- CI status and open review threads (see Step 1) don't get their own tag — they're not a code finding — but if CI is red on the latest commit, or there's an unresolved reviewer comment asking for a real change, say so in one clause in the closing line (e.g. "also: `validate` is currently failing on the latest commit" / "also: an unresolved comment from `<reviewer>` asks for X"). Say nothing about CI/threads at all if they're clean — that's the common case and doesn't need a "CI is green" bullet to prove it.
+- The verdict is for the *diff as a whole*: pick BREAKING if any single finding is breaking, else RISKY if any finding is risky, else SAFE. Hygiene findings never push the verdict past RISKY on their own (a stray file or a placeholder test is a cleanup ask, not a compatibility break) unless the hygiene finding is itself a security boundary violation, in which case treat it like a compat/feature-safety finding of the same severity.
 - If asked about multiple PRs in one request, give one verdict block per PR, in the order asked, with no shared preamble.
 - This is the default depth. Only go longer than this if the user asks a specific follow-up question about one of the findings — then answer that question directly, still without re-padding the rest of the review.
