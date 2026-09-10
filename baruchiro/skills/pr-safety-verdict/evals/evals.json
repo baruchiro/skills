@@ -1,0 +1,48 @@
+{
+  "skill_name": "pr-safety-verdict",
+  "evals": [
+    {
+      "id": 1,
+      "name": "breaking-rename-and-unsafe-feature",
+      "prompt": "Can you do a quick safety review before I open this PR? The diff is at evals/fixtures/breaking-and-unsafe-feature-diff.txt relative to the skill directory -- read it and review it the way you would a real PR diff. I don't have time to dig into every PR myself -- just give me the important part.",
+      "expected_output": "A BREAKING verdict. Must catch that `UserProfile.lastSeenAt` was renamed to `lastActiveAt` on an exported/public interface -- a breaking shape change existing consumers would notice. Must also flag under feature-safety that the new badge-count fetch (client.getJson inside fetchUserProfile) is NOT wrapped in try/catch, so a failure there throws and would abort the whole profile fetch -- including the core id/displayName/lastActiveAt data that used to succeed on its own -- rather than degrading gracefully. Should flag at least the 2-3 comments that just restate the code or reference issue #482 instead of explaining a non-obvious why. Should be short, not a long essay.",
+      "files": ["evals/fixtures/breaking-and-unsafe-feature-diff.txt"],
+      "expectations": [
+        "The verdict line reads BREAKING",
+        "A [compat] finding identifies the lastSeenAt -> lastActiveAt rename on the exported UserProfile interface as a breaking change",
+        "A [feature-safety] finding identifies that the new badge-count fetch inside fetchUserProfile is not wrapped in try/catch and can throw, aborting the core profile data that previously worked on its own",
+        "At least one [comments] finding flags the 'since it was requested in issue #482' comment, or the restated increment/loop comments, as unnecessary",
+        "The response is a short verdict block with file:line references, not a long essay"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "hygiene-violations",
+      "prompt": "Review this PR before I merge it -- diff is at evals/fixtures/hygiene-violations-diff.txt relative to the skill directory. I mostly want to know if there's anything sloppy in here I'd normally have to point out by hand.",
+      "expected_output": "A verdict (SAFE is defensible on pure compat/feature-safety grounds -- there's no existing behavior being changed) that leads with multiple [hygiene] findings: NOTES.md is a stray scratch/summary file that doesn't belong in the diff; SECURITY.md is an unsolicited meta file the task didn't call for; exportAttachment.ts uses blocking readFileSync/existsSync inside an async function where the fs/promises equivalents should be used instead; the same file resolves a user-supplied relativePath with path.resolve against EXPORT_ROOT without confining it to that root or resolving symlinks, so a path like '../../etc/passwd' or a crafted relative path can escape the intended export directory; and the new test just asserts expect(true).toBe(true) instead of driving the real exportAttachment function.",
+      "files": ["evals/fixtures/hygiene-violations-diff.txt"],
+      "expectations": [
+        "A [hygiene] finding flags NOTES.md as a stray scratch/summary file not part of the feature",
+        "A [hygiene] finding flags SECURITY.md as an unsolicited meta file the PR didn't ask for",
+        "A [hygiene] finding flags the readFileSync/existsSync calls in exportAttachment.ts as blocking I/O that should use fs/promises instead",
+        "A [hygiene] finding flags the relativePath/path.resolve usage in exportAttachment.ts as an unvalidated path input that isn't confined to EXPORT_ROOT or symlink-resolved, i.e. a path traversal risk",
+        "A [hygiene] finding flags exportAttachment.test.ts as a placeholder test (expect(true).toBe(true)) that doesn't exercise the real function",
+        "The response is a short verdict block with file:line references, not a long essay"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "safe-additive-optional-field",
+      "prompt": "Quick safety check before I merge -- diff is at evals/fixtures/safe-additive-diff.txt relative to the skill directory.",
+      "expected_output": "A SAFE verdict. Should note under [compat] that ocrConfidence is a new optional field on DocumentSummary, so existing consumers that don't know about it are unaffected and callers that do see it simply see undefined where they always saw nothing before. Should note under [feature-safety] that the new OCR-confidence fetch is wrapped in try/catch and leaves ocrConfidence undefined on failure rather than throwing or fabricating a value, and that it doesn't mutate anything the core summary construction reads afterward. Should not invent hygiene or comment findings that aren't present in this small, clean diff.",
+      "files": ["evals/fixtures/safe-additive-diff.txt"],
+      "expectations": [
+        "The verdict line reads SAFE",
+        "A [compat] finding notes ocrConfidence is a new optional field that doesn't change existing consumers' results",
+        "A [feature-safety] finding notes the OCR-confidence fetch is guarded by try/catch and degrades to undefined rather than throwing or fabricating a value",
+        "No fabricated [hygiene] or [comments] findings are invented for this clean diff",
+        "The response is a short verdict block, not a long essay"
+      ]
+    }
+  ]
+}
