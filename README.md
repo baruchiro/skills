@@ -39,11 +39,10 @@ waiting-light/
 
 | Skill | What it does |
 |---|---|
-| `pr-walkthrough` | Review a PR (or matching PRs across repos) interactively, chunk by chunk |
+| `pr-safety-verdict` | Quick pass: fast SAFE/RISKY/BREAKING verdict on a PR or diff, including whether it's even ready to review (stalled vs. active) |
+| `pr-walkthrough` | Deep pass: review a PR (or matching PRs across repos) interactively, chunk by chunk |
 | `resolving-pr-review-comments` | Drain unresolved review threads on your own PRs — fetch, reply, resolve, check CI |
 | `test-quality-rubric` | Judge whether an existing unit test earns its keep — Delete, Merge or Rewrite |
-| `pr-readiness-check` | Run first: is a PR stalled waiting on the author, or ready for a real review right now |
-| `pr-safety-verdict` | Run once a PR is ready: fast SAFE/RISKY/BREAKING verdict — comments, backward compat, new-feature graceful degradation, and repo hygiene |
 
 ### Agents
 
