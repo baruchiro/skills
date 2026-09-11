@@ -2,11 +2,12 @@ diff --git a/src/api/userClient.ts b/src/api/userClient.ts
 index 1111111..2222222 100644
 --- a/src/api/userClient.ts
 +++ b/src/api/userClient.ts
-@@ -10,7 +10,7 @@ export interface UserProfile {
+@@ -10,7 +10,8 @@ export interface UserProfile {
    id: string;
    displayName: string;
 -  lastSeenAt: string;
 +  lastActiveAt: string;
++  badgeCount?: number;
  }
 
  export interface FetchOptions {
