@@ -1,6 +1,6 @@
 ---
 name: pr-walkthrough
-description: Use when a user wants to review a pull request (or a set of matching PRs across repos, e.g. frontend+backend) interactively, chunk by chunk, adding review comments rather than reading a full diff dump. This is the deep pass; for a fast SAFE/RISKY/BREAKING verdict instead of an interactive read, use `pr-safety-verdict`.
+description: Use when a user wants to review a pull request (or a set of matching PRs across repos, e.g. frontend+backend) interactively, chunk by chunk, adding review comments rather than reading a full diff dump. This is the deep pass; for a fast SAFE/RISKY/BREAKING verdict instead of an interactive read, use `pr-readiness-verdict`.
 ---
 
 # PR Walkthrough
@@ -9,13 +9,13 @@ description: Use when a user wants to review a pull request (or a set of matchin
 
 Reviews one or more related pull requests one small piece at a time, ordered by how the change actually flows (e.g. request → handler → data layer → response), so the user can absorb, question, and leave comments as they go. Read-only toward the code — feedback becomes PR review comments, not edits.
 
-**Related, and the boundary between them:** `pr-safety-verdict` is the fast pass — a SAFE/RISKY/BREAKING verdict plus a short findings list, including whether the PR is even worth reviewing right now (stalled waiting on the author, an ask never actually addressed). This skill is the slow pass for when the user wants to actually work through the diff themselves, section by section, not just get a verdict on it. A natural flow is verdict first, then walkthrough if the verdict or the user's own judgment says it's worth the deeper read — but don't chain them automatically; each is invoked on its own.
+**Related, and the boundary between them:** `pr-readiness-verdict` is the fast pass — a SAFE/RISKY/BREAKING verdict plus a short findings list, including whether the PR is even worth reviewing right now (stalled waiting on the author, an ask never actually addressed). This skill is the slow pass for when the user wants to actually work through the diff themselves, section by section, not just get a verdict on it. A natural flow is verdict first, then walkthrough if the verdict or the user's own judgment says it's worth the deeper read — but don't chain them automatically; each is invoked on its own.
 
 ## When to Use
 
 - User wants to review/understand a PR, or a set of PRs across repos that implement one feature (e.g. a frontend PR and its matching backend PR)
 - User wants a branch reviewed before a PR even exists yet
-- NOT for a quick "does this PR look OK" sanity check or a safe-to-merge verdict — that's `pr-safety-verdict`
+- NOT for a quick "does this PR look OK" sanity check or a safe-to-merge verdict — that's `pr-readiness-verdict`
 
 ## Workflow
 

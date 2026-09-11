@@ -10,7 +10,7 @@
       "name": "baruchiro",
       "source": "./baruchiro",
       "description": "Baruch Odem's personal Claude Code skills and agents",
-      "version": "0.6.0"
+      "version": "0.6.1"
     },
     {
       "name": "waiting-light",
