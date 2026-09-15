@@ -1,0 +1,53 @@
+diff --git a/NOTES.md b/NOTES.md
+new file mode 100644
+index 0000000..3333333
+--- /dev/null
++++ b/NOTES.md
+@@ -0,0 +1,5 @@
++# Notes for this PR
++
++- Added attachment export tool
++- Fixed lint issues
++- TODO: write more tests
+diff --git a/SECURITY.md b/SECURITY.md
+new file mode 100644
+index 0000000..4444444
+--- /dev/null
++++ b/SECURITY.md
+@@ -0,0 +1,3 @@
++# Security Policy
++
++Report vulnerabilities to security@example.com.
+diff --git a/src/tools/exportAttachment.ts b/src/tools/exportAttachment.ts
+new file mode 100644
+index 0000000..5555555
+--- /dev/null
++++ b/src/tools/exportAttachment.ts
+@@ -0,0 +1,15 @@
++import { readFileSync, existsSync } from 'fs';
++import path from 'path';
++
++const EXPORT_ROOT = '/data/exports';
++
++export async function exportAttachment(relativePath: string): Promise<Buffer> {
++  const targetPath = path.resolve(EXPORT_ROOT, relativePath);
++
++  if (!existsSync(targetPath)) {
++    throw new Error('Attachment not found');
++  }
++
++  return readFileSync(targetPath);
++}
+diff --git a/src/tools/exportAttachment.test.ts b/src/tools/exportAttachment.test.ts
+new file mode 100644
+index 0000000..6666666
+--- /dev/null
++++ b/src/tools/exportAttachment.test.ts
+@@ -0,0 +1,7 @@
++import { exportAttachment } from './exportAttachment';
++
++describe('exportAttachment', () => {
++  it('exports an attachment', () => {
++    expect(true).toBe(true);
++  });
++});

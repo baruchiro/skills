@@ -1,0 +1,48 @@
+diff --git a/src/api/userClient.ts b/src/api/userClient.ts
+index 1111111..2222222 100644
+--- a/src/api/userClient.ts
++++ b/src/api/userClient.ts
+@@ -10,7 +10,8 @@ export interface UserProfile {
+   id: string;
+   displayName: string;
+-  lastSeenAt: string;
++  lastActiveAt: string;
++  badgeCount?: number;
+ }
+
+ export interface FetchOptions {
+@@ -38,20 +38,31 @@ async function fetchUserProfile(client: HttpClient, userId: string): Promise<UserProfile> {
+   const raw = await client.getJson<RawUserProfile>(`/users/${userId}`);
+
+-  return {
++  const profile: UserProfile = {
+     id: raw.id,
+     displayName: raw.name,
+-    lastSeenAt: raw.last_active,
++    lastActiveAt: raw.last_active,
+   };
++
++  // fetch the user's badge count too, since it was requested in issue #482
++  const badgeRaw = await client.getJson<{ count: number }>(`/users/${userId}/badges`);
++  profile.badgeCount = badgeRaw.count;
++
++  // increment the fetched-users counter
++  fetchedUsersCount += 1;
++
++  return profile;
+ }
+
+ export async function fetchAllUserProfiles(
+   client: HttpClient,
+   userIds: string[],
+ ): Promise<UserProfile[]> {
+   const profiles: UserProfile[] = [];
+   for (const userId of userIds) {
+-    const profile = await fetchUserProfile(client, userId);
+-    profiles.push(profile);
++    // loop over every user id and fetch its profile
++    const profile = await fetchUserProfile(client, userId);
++    profiles.push(profile);
+   }
+   return profiles;
+ }
