@@ -79,6 +79,22 @@ Step 4's CI check only reflects what's already on the remote. If any Step 3 agen
 2. After pushing, re-run Step 1's fetch and Step 4's CI check against the new commit. A push can trigger new review activity (CodeRabbit re-reviews on new commits, humans may reply) — a fetch or CI result from before the push is stale and doesn't count.
 3. If the fresh fetch surfaces new actionable threads, take them through Step 2 onward.
 
+## Status report (on demand, and at the end of every pass)
+
+When the user asks where their PRs stand, and as the last line of every pass, run `pr-status.sh OWNER/REPO#N [OWNER/REPO#N ...]` and render its JSON as a table: PR (linked), title, base, status, whose turn (`next`), and `hint`. Sort `ready:ready` rows last. It is read-only and classification is scripted (`classify-pr-status.jq`), not agent judgment.
+
+The user works each PR through two loops. **Draft** is the review loop between them and the agent. **Ready** is the CodeRabbit loop, ending when no thread is open, CodeRabbit reviewed the head commit, and CI is green. Statuses, first match wins:
+
+- `draft:needs-you` / `ready:needs-you` — open threads waiting on the user (an agent reply to read, or an un-👍'd CodeRabbit comment to triage)
+- `draft:needs-agent` / `ready:needs-agent` — open threads for the agent to answer or fix
+- `draft:clean` — no open threads. Tell the user to move it to ready **only if they reviewed all the files**; file review marks are not visible to the script, so say this explicitly
+- `ready:ci-failing` — agent investigates (Step 4)
+- `ready:cr-pending` — CodeRabbit is running, or has only reviewed an older commit
+- `ready:cr-not-triggered` — CodeRabbit posted a skip-style comment and never reviewed the head commit, usually because the base branch is not one it reviews. The script cannot be sure, so read the quoted comment in `hint`, confirm the cause on the PR, and tell the user
+- `ready:cr-no-activity` — no CodeRabbit check, review or comment at all. Possibly still starting; if it persists, check the base branch manually or suggest commenting `@coderabbitai review`
+- `ready:ci-pending` — waiting for CI
+- `ready:ready` — merge candidate
+
 ## Done signal
 
 This skill's pass is fetch → group → handle → (commit/push if there were code changes) → CI-check. "Done" is mechanically checkable, not a judgment call: Step 1's script returns an empty list on every PR (or every remaining thread was deliberately left open awaiting reviewer judgment — expected, not a failure), CI is green on every PR **against the latest pushed commit**, and no local changes from this pass are left uncommitted without the user's explicit say-so. Re-fetching after any push is required to know this — threads resolved or answered in this pass drop out of Step 1's next run, and the human (or CodeRabbit) may have replied again in the meantime.
