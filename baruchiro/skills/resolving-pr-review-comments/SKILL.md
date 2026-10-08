@@ -81,7 +81,7 @@ Step 4's CI check only reflects what's already on the remote. If any Step 3 agen
 
 ## Status report (on demand, and at the end of every pass)
 
-When the user asks where their PRs stand, and as the last line of every pass, run `pr-status.sh OWNER/REPO#N [OWNER/REPO#N ...]` and render its JSON as a table: PR (linked), title, base, status, whose turn (`next`), and `hint`. Sort `ready:ready` rows last. It is read-only and classification is scripted (`classify-pr-status.jq`), not agent judgment.
+When the user asks where their PRs stand, and as the last line of every pass, run `pr-status.sh OWNER/REPO#N [OWNER/REPO#N ...]` and render its JSON as a table: PR (linked), title, base, status, whose turn (`next`), and `hint`. Sort `ready:ready` rows last. The script also always writes the same table to `~/.claude/pr-status.md` (override with `PR_STATUS_FILE`), PRs in the order given, so the user can keep it open and walk the PRs in order after the conversation has scrolled on — tell them the path. Pass PRs in stack order. It is read-only (apart from that file) and classification is scripted (`classify-pr-status.jq`), not agent judgment.
 
 The user works each PR through two loops. **Draft** is the review loop between them and the agent. **Ready** is the CodeRabbit loop, ending when no thread is open, CodeRabbit reviewed the head commit, and CI is green. Statuses, first match wins:
 
