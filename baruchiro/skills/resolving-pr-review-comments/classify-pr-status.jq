@@ -8,6 +8,10 @@ def threadOwner($marker):
 
 def checkName: .name // .context // "";
 
+# A re-run (or a run superseded by a new push to the base) leaves the older run in the rollup,
+# often as CANCELLED. Only the newest run of each check reflects the head commit.
+def latestRuns: group_by(checkName) | map(max_by(.startedAt // ""));
+
 def checkState:
   if .status != null then
     if .status != "COMPLETED" then "pending"
@@ -22,7 +26,7 @@ def skipPattern: "skip|base branch|target branch|paused|not enabled";
 def classifyPr($marker):
   . as $pr |
   ($pr.reviewThreads.nodes | map(select(.isResolved | not) | threadOwner($marker))) as $owners |
-  ($pr.commits.nodes[0].commit.statusCheckRollup.contexts.nodes // []) as $checks |
+  ($pr.commits.nodes[0].commit.statusCheckRollup.contexts.nodes // [] | latestRuns) as $checks |
   ($checks | map(select(checkName | ascii_downcase | contains("coderabbit")))) as $crChecks |
   ($checks - $crChecks) as $ciChecks |
   ($pr.reviews.nodes | map(select(isCoderabbit))) as $crReviews |

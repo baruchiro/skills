@@ -36,7 +36,7 @@ query($owner:String!, $repo:String!, $pr:Int!) {
       commits(last:1) {
         nodes { commit { statusCheckRollup { contexts(first:100) { nodes {
           __typename
-          ... on CheckRun { name status conclusion }
+          ... on CheckRun { name status conclusion startedAt }
           ... on StatusContext { context state description }
         } } } } }
       }

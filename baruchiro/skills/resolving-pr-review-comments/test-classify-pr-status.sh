@@ -23,6 +23,8 @@ cr_unliked='{isResolved:false,comments:{nodes:[{author:{login:"coderabbitai"},bo
 cr_liked='{isResolved:false,comments:{nodes:[{author:{login:"coderabbitai"},body:"nit",reactionGroups:[{content:"THUMBS_UP",viewerHasReacted:true}]}]}}'
 ci_ok='{name:"build",status:"COMPLETED",conclusion:"SUCCESS"}'
 ci_bad='{name:"build",status:"COMPLETED",conclusion:"FAILURE"}'
+ci_cancelled_then_ok='{name:"build",status:"COMPLETED",conclusion:"CANCELLED",startedAt:"2026-01-01T10:00:00Z"},{name:"build",status:"COMPLETED",conclusion:"SUCCESS",startedAt:"2026-01-01T10:05:00Z"}'
+ci_ok_then_bad='{name:"build",status:"COMPLETED",conclusion:"SUCCESS",startedAt:"2026-01-01T10:00:00Z"},{name:"build",status:"COMPLETED",conclusion:"FAILURE",startedAt:"2026-01-01T10:05:00Z"}'
 ci_wait='{name:"build",status:"IN_PROGRESS",conclusion:null}'
 cr_run='{name:"CodeRabbit",status:"IN_PROGRESS",conclusion:null}'
 cr_done='{name:"CodeRabbit",status:"COMPLETED",conclusion:"SUCCESS"}'
@@ -48,5 +50,7 @@ check ready:cr-not-triggered false "[]" "[$ci_ok]" "[]" "$cr_skip"
 check ready:cr-no-activity false "[]" "[$ci_ok]" "[]" "[]"
 check ready:ci-pending false "[]" "[$ci_wait,$cr_done]" "$cr_review_head" "[]"
 check ready:ready false "[]" "[$ci_ok,$cr_done]" "$cr_review_head" "[]"
+check ready:ready false "[]" "[$ci_cancelled_then_ok,$cr_done]" "$cr_review_head" "[]"
+check ready:ci-failing false "[]" "[$ci_ok_then_bad,$cr_done]" "$cr_review_head" "[]"
 check ready:needs-you false "[$cr_unliked]" "[$ci_ok,$cr_done]" "$cr_review_head" "[]"
 echo "ok"
