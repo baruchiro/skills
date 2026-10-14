@@ -81,7 +81,9 @@ Step 4's CI check only reflects what's already on the remote. If any Step 3 agen
 
 ## Status report (on demand, and at the end of every pass)
 
-When the user asks where their PRs stand, and as the last line of every pass, run `pr-status.sh OWNER/REPO#N [OWNER/REPO#N ...]` and render its JSON as a table: PR (linked), title, base, status, whose turn (`next`), and `hint`. Sort `ready:ready` rows last. The script also always writes the same table to `~/.claude/pr-status.md` (override with `PR_STATUS_FILE`), PRs in the order given, so the user can keep it open and walk the PRs in order after the conversation has scrolled on.
+When the user asks where their PRs stand, and as the last line of every pass, run `pr-status.sh OWNER/REPO#N [OWNER/REPO#N ...]` and render its JSON as a table: PR (linked), title, base, status, whose turn (`next`), `hint`, and review order (`reviewOrder`: a short `[open](url)` link, `stale`, or empty). Sort `ready:ready` rows last. The script also always writes the same table to `~/.claude/pr-status.md` (override with `PR_STATUS_FILE`), PRs in the order given, so the user can keep it open and walk the PRs in order after the conversation has scrolled on.
+
+The **Review order** column comes from `~/.claude/pr-review-links.json` (override with `PR_REVIEW_LINKS_FILE`), which the next section fills. `reviewOrder` is the recorded `/pr-review-sorter` link only while the PR's head is still the commit the link was built against; after a newer push it is `stale`, and it is `null` (empty cell) when no link was ever recorded.
 
 **At the end of every pass — not only when asked — run it for all PRs in scope and give the user the file's link** (`~/.claude/pr-status.md`, or `$PR_STATUS_FILE` when set) in your final message. Every pass, every time, even if nothing changed since the last one: the file is how the user picks up where the conversation left off. Pass PRs in stack order. It is read-only (apart from that file) and classification is scripted (`classify-pr-status.jq`), not agent judgment.
 
@@ -99,7 +101,15 @@ The user works each PR through two loops. **Draft** is the review loop between t
 
 ## Review-order links for changed PRs (end of every pass)
 
-After the status report, for each PR whose diff changed during this pass (this pass pushed commits to it) **and** that has more than 5 changed files, regenerate its review-order link with the `/pr-review-sorter` skill — a fresh file order and line notes against the new head, since the old link points at a diff that no longer exists. Give the links to the user in the same final message. Skip PRs that didn't change, and PRs with 5 files or fewer. If `/pr-review-sorter` isn't available, say so and skip this step.
+Before the status report, for each PR whose diff changed during this pass (this pass pushed commits to it) **and** that has more than 5 changed files, regenerate its review-order link with the `/pr-review-sorter` skill — a fresh file order and line notes against the new head, since the old link points at a diff that no longer exists. Record each new link in the sidecar file, so the status table carries it — replace `OWNER/REPO#N` and `$URL`:
+
+```bash
+f="${PR_REVIEW_LINKS_FILE:-$HOME/.claude/pr-review-links.json}"
+head=$(gh pr view N -R OWNER/REPO --json headRefOid -q .headRefOid)
+{ cat "$f" 2>/dev/null || echo '{}'; } | jq --arg k 'OWNER/REPO#N' --arg url "$URL" --arg head "$head" '.[$k] = {url: $url, head: $head}' > "$f.tmp" && mv "$f.tmp" "$f"
+```
+
+The file is `{"OWNER/REPO#N": {"url": "...", "head": "<head SHA>"}}`; `pr-status.sh` only reads it. Give the links to the user in the same final message. Skip PRs that didn't change, and PRs with 5 files or fewer. If `/pr-review-sorter` isn't available, say so and skip this step.
 
 ## Done signal
 

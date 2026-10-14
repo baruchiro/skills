@@ -4,11 +4,13 @@
 # Usage: pr-status.sh OWNER/REPO#NUMBER [OWNER/REPO#NUMBER ...]
 # Prints a JSON array and always writes the same data as a Markdown table to
 # $PR_STATUS_FILE (default ~/.claude/pr-status.md), PRs in the order given.
-# Classification lives in classify-pr-status.jq.
+# Classification lives in classify-pr-status.jq. Review-order links are read from
+# $PR_REVIEW_LINKS_FILE (default ~/.claude/pr-review-links.json), written by the agent.
 set -euo pipefail
 
 tmp=$(mktemp); trap 'rm -f "$tmp"' EXIT
 STATUS_FILE="${PR_STATUS_FILE:-$HOME/.claude/pr-status.md}"
+LINKS_FILE="${PR_REVIEW_LINKS_FILE:-$HOME/.claude/pr-review-links.json}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 [ $# -gt 0 ] || { echo "Usage: $0 OWNER/REPO#NUMBER [...]" >&2; exit 1; }
@@ -50,9 +52,10 @@ for spec in "$@"; do
   gh api graphql -f query="$query" -F owner="${BASH_REMATCH[1]}" -F repo="${BASH_REMATCH[2]}" -F pr="${BASH_REMATCH[3]}" |
     jq -e --arg repo "$repo_path" '.data.repository.pullRequest | select(.reviewThreads.pageInfo.hasNextPage | not) | .repo = $repo' ||
     { echo "$spec: PR not found or has more than 100 review threads" >&2; exit 1; }
-done | jq -L "$SCRIPT_DIR" --arg marker "$AGENT_MARKER" -s 'include "classify-pr-status"; map(classifyPr($marker))' >"$tmp"
+done | jq -L "$SCRIPT_DIR" --arg marker "$AGENT_MARKER" --argjson links "$(cat "$LINKS_FILE" 2>/dev/null || echo '{}')" -s \
+  'include "classify-pr-status"; map(classifyPr($marker) + {reviewOrder: reviewOrder($links)})' >"$tmp"
 cat "$tmp"
 jq -r --arg now "$(date '+%Y-%m-%d %H:%M')" '
-    "# PR status — \($now)\n\n| # | PR | Status | Turn | Hint |\n|---|---|---|---|---|",
-    (to_entries[] | "| \(.key + 1) | [\(.value.repo)#\(.value.number)](\(.value.url)) \(.value.title | gsub("\\|"; "/")) | `\(.value.status)` | \(.value.next) | \(.value.hint | gsub("\n"; " ") | gsub("\\|"; "/")) |")
+    "# PR status — \($now)\n\n| # | PR | Status | Turn | Hint | Review order |\n|---|---|---|---|---|---|",
+    (to_entries[] | "| \(.key + 1) | [\(.value.repo)#\(.value.number)](\(.value.url)) \(.value.title | gsub("\\|"; "/")) | `\(.value.status)` | \(.value.next) | \(.value.hint | gsub("\n"; " ") | gsub("\\|"; "/")) | \(.value.reviewOrder | if . == null then "" elif . == "stale" then "stale" else "[open](\(.))" end) |")
   ' "$tmp" > "$STATUS_FILE"

@@ -62,3 +62,11 @@ def classifyPr($marker):
   else
     result("ready"; "merge"; "no open threads, CodeRabbit reviewed the head commit, CI green")
   end;
+
+# $links: {"OWNER/REPO#N": {url, head}} recorded when the /pr-review-sorter link was made.
+# A link built against an older head points at a diff that no longer exists.
+def reviewOrder($links):
+  $links["\(.repo)#\(.number)"] as $l |
+  if $l == null then null
+  elif $l.head == .headRefOid then $l.url
+  else "stale" end;
