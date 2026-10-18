@@ -3,15 +3,16 @@
 #
 # Usage: pr-status.sh OWNER/REPO#NUMBER [OWNER/REPO#NUMBER ...]
 # Prints a JSON array and always writes the same data as a Markdown table to
-# $PR_STATUS_FILE (default ~/.claude/pr-status.md), PRs in the order given.
+# $PR_STATUS_FILE (default <project folder>/pr-status.md, see project-dir.sh), PRs in the order given.
 # Classification lives in classify-pr-status.jq. Review-order links are read from
-# $PR_REVIEW_LINKS_FILE (default ~/.claude/pr-review-links.json), written by the agent.
+# $PR_REVIEW_LINKS_FILE (default <project folder>/pr-review-links.json), written by the agent.
 set -euo pipefail
 
 tmp=$(mktemp); trap 'rm -f "$tmp"' EXIT
-STATUS_FILE="${PR_STATUS_FILE:-$HOME/.claude/pr-status.md}"
-LINKS_FILE="${PR_REVIEW_LINKS_FILE:-$HOME/.claude/pr-review-links.json}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$("$SCRIPT_DIR/project-dir.sh")"
+STATUS_FILE="${PR_STATUS_FILE:-$PROJECT_DIR/pr-status.md}"
+LINKS_FILE="${PR_REVIEW_LINKS_FILE:-$PROJECT_DIR/pr-review-links.json}"
 
 [ $# -gt 0 ] || { echo "Usage: $0 OWNER/REPO#NUMBER [...]" >&2; exit 1; }
 

@@ -81,11 +81,11 @@ Step 4's CI check only reflects what's already on the remote. If any Step 3 agen
 
 ## Status report (on demand, and at the end of every pass)
 
-When the user asks where their PRs stand, and as the last line of every pass, run `pr-status.sh OWNER/REPO#N [OWNER/REPO#N ...]` and render its JSON as a table: PR (linked), title, base, status, whose turn (`next`), `hint`, and review order (`reviewOrder`: a short `[open](url)` link, `stale`, or empty). Sort `ready:ready` rows last. The script also always writes the same table to `~/.claude/pr-status.md` (override with `PR_STATUS_FILE`), PRs in the order given, so the user can keep it open and walk the PRs in order after the conversation has scrolled on.
+When the user asks where their PRs stand, and as the last line of every pass, run `pr-status.sh OWNER/REPO#N [OWNER/REPO#N ...]` and render its JSON as a table: PR (linked), title, base, status, whose turn (`next`), `hint`, and review order (`reviewOrder`: a short `[open](url)` link, `stale`, or empty). Sort `ready:ready` rows last. The script also always writes the same table to `pr-status.md` in the project folder (override with `PR_STATUS_FILE`), PRs in the order given, so the user and anyone on the project can keep it open and walk the PRs in order after the conversation has scrolled on. `project-dir.sh` picks the project folder: the nearest folder below `$HOME` with a `*.code-workspace` file (a multi-repo workspace, so one file covers PRs from every repo in it), else the git repo root, else the current folder. Inside a git repo it adds both files to `info/exclude`, so they never get committed. Run the script from the folder of the work, never from the home folder.
 
-The **Review order** column comes from `~/.claude/pr-review-links.json` (override with `PR_REVIEW_LINKS_FILE`), which the next section fills. `reviewOrder` is the recorded `/pr-review-sorter` link only while the PR's head is still the commit the link was built against; after a newer push it is `stale`, and it is `null` (empty cell) when no link was ever recorded.
+The **Review order** column comes from `pr-review-links.json` in the same project folder (override with `PR_REVIEW_LINKS_FILE`), which the next section fills. `reviewOrder` is the recorded `/pr-review-sorter` link only while the PR's head is still the commit the link was built against; after a newer push it is `stale`, and it is `null` (empty cell) when no link was ever recorded.
 
-**At the end of every pass — not only when asked — run it for all PRs in scope and give the user the file's link** (`~/.claude/pr-status.md`, or `$PR_STATUS_FILE` when set) in your final message. Every pass, every time, even if nothing changed since the last one: the file is how the user picks up where the conversation left off. Pass PRs in stack order. It is read-only (apart from that file) and classification is scripted (`classify-pr-status.jq`), not agent judgment.
+**At the end of every pass — not only when asked — run it for all PRs in scope and give the user the file's full path** (`<project folder>/pr-status.md`, or `$PR_STATUS_FILE` when set) in your final message. Every pass, every time, even if nothing changed since the last one: the file is how the user picks up where the conversation left off. Pass PRs in stack order. It is read-only (apart from that file) and classification is scripted (`classify-pr-status.jq`), not agent judgment.
 
 The user works each PR through two loops. **Draft** is the review loop between them and the agent. **Ready** is the CodeRabbit loop, ending when no thread is open, CodeRabbit reviewed the head commit, and CI is green. Statuses, first match wins:
 
@@ -101,10 +101,10 @@ The user works each PR through two loops. **Draft** is the review loop between t
 
 ## Review-order links for changed PRs (end of every pass)
 
-Before the status report, for each PR whose diff changed during this pass (this pass pushed commits to it) **and** that has more than 5 changed files, regenerate its review-order link with the `/pr-review-sorter` skill — a fresh file order and line notes against the new head, since the old link points at a diff that no longer exists. Record each new link in the sidecar file, so the status table carries it — replace `OWNER/REPO#N` and `$URL`:
+Before the status report, for each PR whose diff changed during this pass (this pass pushed commits to it) **and** that has more than 5 changed files, regenerate its review-order link with the `/pr-review-sorter` skill — a fresh file order and line notes against the new head, since the old link points at a diff that no longer exists. Record each new link in the sidecar file, so the status table carries it — replace `OWNER/REPO#N` and `$URL`, and set `SKILL_DIR` to this skill's directory:
 
 ```bash
-f="${PR_REVIEW_LINKS_FILE:-$HOME/.claude/pr-review-links.json}"
+f="${PR_REVIEW_LINKS_FILE:-$("$SKILL_DIR/project-dir.sh")/pr-review-links.json}"
 head=$(gh pr view N -R OWNER/REPO --json headRefOid -q .headRefOid)
 { cat "$f" 2>/dev/null || echo '{}'; } | jq --arg k 'OWNER/REPO#N' --arg url "$URL" --arg head "$head" '.[$k] = {url: $url, head: $head}' > "$f.tmp" && mv "$f.tmp" "$f"
 ```
