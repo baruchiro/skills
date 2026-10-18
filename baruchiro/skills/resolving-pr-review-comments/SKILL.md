@@ -79,6 +79,8 @@ Step 4's CI check only reflects what's already on the remote. If any Step 3 agen
 2. After pushing, re-run Step 1's fetch and Step 4's CI check against the new commit. A push can trigger new review activity (CodeRabbit re-reviews on new commits, humans may reply) — a fetch or CI result from before the push is stale and doesn't count.
 3. If the fresh fetch surfaces new actionable threads, take them through Step 2 onward.
 
+**Don't idle through long waits.** A CI run, or a push behind a pre-push hook that runs the whole test suite, can take minutes. Run it in the background, and while it runs, re-run Step 1's fetch on every PR in scope and take any new threads through Step 2 onward. Reviewers keep commenting while you wait.
+
 ## Status report (on demand, and at the end of every pass)
 
 When the user asks where their PRs stand, and as the last line of every pass, run `pr-status.sh OWNER/REPO#N [OWNER/REPO#N ...]` and render its JSON as a table: PR (linked), title, base, status, whose turn (`next`), `hint`, and review order (`reviewOrder`: a short `[open](url)` link, `stale`, or empty). Keep the rows in the order the script printed them, which is the order you passed. The script also always writes the same table to `pr-status.md` in the project folder (override with `PR_STATUS_FILE`), PRs in the order given, so the user and anyone on the project can keep it open and walk the PRs in order after the conversation has scrolled on. `project-dir.sh` picks the project folder: the nearest folder below `$HOME` with a `*.code-workspace` file (a multi-repo workspace, so one file covers PRs from every repo in it), else the git repo root, else the current folder. Inside a git repo it adds both files to `info/exclude`, so they never get committed. Run the script from the folder of the work, never from the home folder.
@@ -113,7 +115,7 @@ The file is `{"OWNER/REPO#N": {"url": "...", "head": "<head SHA>"}}`; `pr-status
 
 ## Done signal
 
-This skill's pass is fetch → group → handle → (commit/push if there were code changes) → CI-check → end-of-pass outputs (the `pr-status.md` link, plus regenerated `/pr-review-sorter` links for changed PRs over 5 files). "Done" is mechanically checkable, not a judgment call: Step 1's script returns an empty list on every PR (or every remaining thread was deliberately left open awaiting reviewer judgment — expected, not a failure), CI is green on every PR **against the latest pushed commit**, and no local changes from this pass are left uncommitted without the user's explicit say-so. Re-fetching after any push is required to know this — threads resolved or answered in this pass drop out of Step 1's next run, and the human (or CodeRabbit) may have replied again in the meantime.
+This skill's pass is fetch → group → handle → (commit/push if there were code changes) → CI-check → end-of-pass outputs (the `pr-status.md` link, plus regenerated `/pr-review-sorter` links for changed PRs over 5 files). "Done" is mechanically checkable, not a judgment call: Step 1's script returns an empty list on every PR (or every remaining thread was deliberately left open awaiting reviewer judgment — expected, not a failure), CI is green on every PR **against the latest pushed commit**, and no local changes from this pass are left uncommitted without the user's explicit say-so. Re-fetching after any push is required to know this — threads resolved or answered in this pass drop out of Step 1's next run, and the human (or CodeRabbit) may have replied again in the meantime. While waiting on CI or a push to reach that state, keep fetching threads (Step 5) instead of idling.
 
 Whether and how often to repeat this pass belongs to whatever is driving the overall task (a `/goal`-style directive, or however the user invoked this) — not to this skill. Don't build a loop into this skill's own instructions; just leave the done-condition unambiguous enough that the caller can check it.
 
@@ -128,5 +130,6 @@ If driven by Claude Code's `/goal`: its evaluator judges the condition from the 
 - Resolving a thread that raised a question or tradeoff the reviewer hasn't weighed in on yet, just because you replied to it.
 - One dispatch per individual comment instead of per logical group — burns agent-dispatch overhead and loses cross-comment context within a thread.
 - Declaring done off a CI run or fetch result from before a push — CI-green on the pre-fix commit, or a fetch taken before the fix landed, proves nothing about the fix.
+- Idling while CI or a push runs instead of re-fetching threads — run the wait in the background and drain new threads on every PR in scope meanwhile.
 - Ending a pass without the `pr-status.md` link (or `$PR_STATUS_FILE`) in the final message — it's owed every pass, not only when the user asks where things stand.
 - Committing/pushing without the user's go-ahead when the invoking task never authorized it — the exception is narrow (the task/goal must actually say so), not assumed.
