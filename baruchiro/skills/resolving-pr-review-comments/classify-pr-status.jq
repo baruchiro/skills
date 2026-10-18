@@ -64,9 +64,10 @@ def classifyPr($marker):
   end;
 
 # $links: {"OWNER/REPO#N": {url, head}} recorded when the /pr-review-sorter link was made.
+# head is the commit SHA, full or abbreviated to at least 7 characters.
 # A link built against an older head points at a diff that no longer exists.
 def reviewOrder($links):
   $links["\(.repo)#\(.number)"] as $l |
   if $l == null then null
-  elif $l.head == .headRefOid then $l.url
+  elif ($l.head | length) >= 7 and (.headRefOid | startswith($l.head)) then $l.url
   else "stale" end;

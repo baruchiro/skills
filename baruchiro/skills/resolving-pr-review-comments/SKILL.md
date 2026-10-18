@@ -111,7 +111,7 @@ head=$(gh pr view N -R OWNER/REPO --json headRefOid -q .headRefOid)
 { cat "$f" 2>/dev/null || echo '{}'; } | jq --arg k 'OWNER/REPO#N' --arg url "$URL" --arg head "$head" '.[$k] = {url: $url, head: $head}' > "$f.tmp" && mv "$f.tmp" "$f"
 ```
 
-The file is `{"OWNER/REPO#N": {"url": "...", "head": "<head SHA>"}}`; `pr-status.sh` only reads it. Give the links to the user in the same final message. Skip PRs that didn't change, and PRs with 5 files or fewer. If `/pr-review-sorter` isn't available, say so and skip this step.
+The file is `{"OWNER/REPO#N": {"url": "...", "head": "<head SHA>"}}`, where `head` is the commit SHA the link was built against, full or abbreviated to at least 7 characters (a shorter or empty `head` always reads as `stale`); `pr-status.sh` only reads it. Give the links to the user in the same final message. Skip PRs that didn't change, and PRs with 5 files or fewer. If `/pr-review-sorter` isn't available, say so and skip this step.
 
 ## Done signal
 

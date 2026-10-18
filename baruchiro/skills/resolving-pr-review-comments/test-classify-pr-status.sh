@@ -54,15 +54,19 @@ check ready:ready false "[]" "[$ci_cancelled_then_ok,$cr_done]" "$cr_review_head
 check ready:ci-failing false "[]" "[$ci_ok_then_bad,$cr_done]" "$cr_review_head" "[]"
 check ready:needs-you false "[$cr_unliked]" "[$ci_ok,$cr_done]" "$cr_review_head" "[]"
 
+sha=9f3c2a1b7e4d5c6f8a0b1c2d3e4f5a6b7c8d9e0f
 review_order() {
-  jq -L "$SCRIPT_DIR" --argjson links "$1" -r 'include "classify-pr-status"; reviewOrder($links) // "none"' <<<"$(pr false "[]" "[]" "[]" "[]")"
+  jq -L "$SCRIPT_DIR" --argjson links "$1" --arg sha "$sha" -r 'include "classify-pr-status"; .headRefOid = $sha | reviewOrder($links) // "none"' <<<"$(pr false "[]" "[]" "[]" "[]")"
 }
 check_review_order() {
   local got; got=$(review_order "$2")
   [ "$got" = "$1" ] || { echo "FAIL: reviewOrder want $1, got $got" >&2; exit 1; }
 }
 check_review_order none '{}'
-check_review_order https://x '{"o/r#1":{"url":"https://x","head":"head"}}'
-check_review_order stale '{"o/r#1":{"url":"https://x","head":"old"}}'
-check_review_order none '{"o/r#2":{"url":"https://x","head":"head"}}'
+check_review_order https://x "{\"o/r#1\":{\"url\":\"https://x\",\"head\":\"$sha\"}}"
+check_review_order https://x '{"o/r#1":{"url":"https://x","head":"9f3c2a1b7"}}'
+check_review_order stale '{"o/r#1":{"url":"https://x","head":"1234567ab"}}'
+check_review_order stale '{"o/r#1":{"url":"https://x","head":"9f3c2a"}}'
+check_review_order stale '{"o/r#1":{"url":"https://x","head":""}}'
+check_review_order none "{\"o/r#2\":{\"url\":\"https://x\",\"head\":\"$sha\"}}"
 echo "ok"
