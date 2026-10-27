@@ -1,7 +1,7 @@
 ---
 name: book-search
 description: "Use when checking books across online stores."
-version: 0.1.1
+version: 0.2.0
 author: Baruch Odem (baruchiro), Hermes Agent
 license: MIT
 platforms: [linux, macos, windows]
@@ -16,6 +16,7 @@ Find books across user-selected stores using a repeatable, read-only procedure. 
 ## When to Use
 - Search a title or author, compare copies and check website-reported availability.
 - Check a user-provided wishlist across named stores.
+- For עברית / e-vrit digital books and public-library eligibility, load [the e-vrit procedure](references/evrit.md) before searching. Verify the exact main-book marker, not merely a digital format.
 - Do not use for checkout, reservations, bypassing access controls or scheduled crawling.
 
 ## Prerequisites
@@ -65,4 +66,4 @@ Replace the quoted query placeholders with user-requested titles/authors. The he
 - No universal adapter, background monitoring, anti-bot bypass or automatic alias learning is shipped.
 
 ## Verification
-Through `terminal`, run `python3 "SKILL_DIR/scripts/test_rebooks_search.py"` (20 offline helper regressions) and `python3 -m unittest discover -s "SKILL_DIR/tests" -v` (3 package checks). On Windows PowerShell, use `py -3` in place of `python3`. Run title and author searches live only when access permits; counts are not fixed. Failures/timeouts are errors, not absence. Before reporting stock, perform step 6 independently. See README for clean extraction checks and tested platform limits.
+Through `terminal`, run `python3 "SKILL_DIR/scripts/test_rebooks_search.py"` (20 offline helper regressions) and `python3 -m unittest discover -s "SKILL_DIR/tests" -v` (package integrity and e-vrit documentation checks; not automated browser tests). On Windows PowerShell, use `py -3` in place of `python3`. Run title and author searches live only when access permits; counts are not fixed. Failures/timeouts are errors, not absence. Before reporting stock, perform step 6 independently. See README for clean extraction checks and tested platform limits.

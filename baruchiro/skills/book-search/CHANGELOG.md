@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0
+- Added a dedicated e-vrit browser procedure for title/author discovery, exact book/volume identity, separate digital/audio/print formats and the literal `ספריה ציבורית דיגיטלית` marker.
+- Require rendered main-book details, allow asynchronous details to finish loading, distinguish unknown from a missing marker, and keep library-specific account/quota information outside the public package.
+- Keep the provider-independent name `book-search`; `rebooks_search.py` remains the Rebooks-only helper, not the skill name. No e-vrit scraper or lending API is claimed.
+- Added documentation contract checks, updated provider coverage and installation instructions, and regenerated the package manifest.
+- Bumped shared plugin/marketplace metadata to 0.11.0. No GitHub Release/tag is implied.
+
 ## 0.1.1
 - Bounded author and price extraction to each search-result or main-product element, with regression coverage for unrelated footer/sidebar metadata.
 - Stop immediately on non-transient HTTP errors, including 403/429; retain bounded retries for transient HTTP failures.
