@@ -1,0 +1,12 @@
+{
+  "CHANGELOG.md": "dd86224b6ab454f7d58802f330d8a02f1303744f69676d42fe139b74d8614823",
+  "LICENSE": "1c05f348c6177914ba3b203919bf47df1b33fcaf8974293ea75a7f0b7ecaa0cb",
+  "README.md": "8e85fe063151a38e7ec5b2cc727c14fb107cca0b5e45ff67c7005ccb93151ccc",
+  "SKILL.md": "701b70501f502e327de449ec2a446e16965846ec9d3fefa9b9d78702cefb23a3",
+  "references/aliases.example.json": "8a8fb455a9080e2d3ea95d2fc69b7e84dfe0605b2767f62e15edd9dfbc070ffa",
+  "references/providers.md": "fd666e670a6af4b43d621fd783290c9bf52a15b9c418f89ba155c8c0d35a9e13",
+  "references/site-limits.md": "ff34e1960b1afd633c34ed635e8262feeb8ab6d79d03ed8ce44a3475808aaee5",
+  "scripts/rebooks_search.py": "38900a254814f0a444ebe3f81ea2eea49d11db6429940ad3edaa8e3822d895e6",
+  "scripts/test_rebooks_search.py": "65fefc869d7ca1c495137926631358db3704656d05b0f602f139d6f16db07777",
+  "tests/test_package.py": "0ab19b410d5a57e47b235ec5b3cf285daa382eec2b788f3085e49d66f166b1ac"
+}

@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "books": [
+    {
+      "alias": "example-title",
+      "store": "Example bookstore (fictional)",
+      "exact_site_title": "The Example Book (fictional)",
+      "url": "https://example.invalid/book/123",
+      "verification_date": "2026-10-27"
+    }
+  ]
+}
