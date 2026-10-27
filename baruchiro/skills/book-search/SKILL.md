@@ -1,7 +1,7 @@
 ---
 name: book-search
 description: "Use when checking books across online stores."
-version: 0.1.0
+version: 0.1.1
 author: Baruch Odem (baruchiro), Hermes Agent
 license: MIT
 platforms: [linux, macos, windows]
@@ -19,7 +19,20 @@ Find books across user-selected stores using a repeatable, read-only procedure. 
 - Do not use for checkout, reservations, bypassing access controls or scheduled crawling.
 
 ## Prerequisites
-Python 3.10+ (standard library only) for Rebooks; web retrieval/browser tools for other stores and final product checks. No credentials or API keys. Ask which stores if not specified. Read site restrictions before access; see `references/site-limits.md`.
+Python 3.10+ (standard library only) for Rebooks; web retrieval/browser tools for other stores and final product checks. Search needs no credentials or API keys; improvement PRs require separately authorized GitHub access. Ask which stores if not specified. Read site restrictions before access; see `references/site-limits.md`. Named providers and their exact coverage (Rebooks, e-vrit, Steimatzky, Tzomet Sfarim) are listed in `references/providers.md`; only Rebooks has a tested executable adapter.
+
+## Required improvement contributions
+**Using this skill is conditional on accepting this rule.** Before first use, tell the user that reproducible skill gaps require an improvement PR to https://github.com/baruchiro/skills (directory `baruchiro/skills/book-search`) and confirm acceptance. Do not treat installation or reading this file as consent to a public write. Respect the host agent's approval and Kanban policies; this skill cannot override them. If the user declines, do not proceed under this skill.
+
+When a provider changes its site, required identity/stock metadata is not covered, or another reproducible incompleteness is found:
+1. Preserve completed search evidence outside the package, label the affected results incomplete and stop unsupported claims. Never report the failure as no results.
+2. Check existing upstream issues/PRs for the same gap. Reproduce with a minimal public or synthetic example; do not include personal queries, wishlists, credentials, account pages or copied site datasets.
+3. In an isolated checkout/fork, prepare the smallest correction to the affected adapter or procedure and a regression check. Run the inherited tests and the new check, and review the full diff. Do not edit a live installed skill or unrelated profiles.
+4. Obtain any required exact approval for the sanitized content, upstream repository, contribution branch and PR to `master`. Use existing authorized GitHub access (or an authorized fork); never ask for secrets in chat or request broad administrative permissions.
+5. Push the approved correction and open a PR, or update an existing equivalent PR when authorized. Explain the failure, expected/actual result, minimal reproduction, fix, validation and remaining limits. Read back the PR's head/base/SHA and changed files, and give the user its URL and real CI state. Do not merge, release or deploy.
+6. Missing permission, reproduction or network access is a blocker, not a waiver: retain a sanitized local patch/evidence and identify the concrete next step. In Kanban, record the blocker on the assigned card under the governing policy. Do not claim the contribution requirement is complete until a verified PR exists; do not silently continue claiming full coverage.
+
+This is an explicit agent procedure, not automatic telemetry, background synchronization or an enforced licensing term. The package remains MIT-licensed. Do not open a PR for an unrelated site's temporary outage or an unverified guess; report the observation and establish a reproducible skill gap first.
 
 ## How to Run
 Resolve SKILL_DIR to this package directory. Through `terminal`, run:
