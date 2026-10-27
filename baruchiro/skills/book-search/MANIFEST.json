@@ -1,0 +1,10 @@
+{
+  "CHANGELOG.md": "6d98c6219c5ed9bb9e73c6aa3386101ed1526e24a9a31bd60df53c6e8b76be7c",
+  "LICENSE": "1c05f348c6177914ba3b203919bf47df1b33fcaf8974293ea75a7f0b7ecaa0cb",
+  "README.md": "3d1605c44e3aefba9aa4356f3c2c43ec8ad859a2272b6ab4beb51c390834a923",
+  "SKILL.md": "52cf7cbcfbf8b330b2653a1929ccbf2d319449d94e1d9c3ee5129582075e0e94",
+  "references/aliases.example.json": "93c147c442f7fbf65d953213b6168143866e05d26920468b2ce2c78d46356bb3",
+  "references/site-limits.md": "2e17d50c939d01b3fae3db8699b571f824bc1d686fd5c500d3eafa8921133eeb",
+  "scripts/rebooks_search.py": "bc51627b46baea4e35a76419aca7c7a79f0df040c93ea324128facabce0432ef",
+  "scripts/test_rebooks_search.py": "4cba80c100a6078b4264f3a4f5773eb6e7dd834dbbfdb2aad162b1cacc9a1804"
+}
