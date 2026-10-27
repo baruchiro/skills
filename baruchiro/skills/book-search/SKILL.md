@@ -27,7 +27,7 @@ Python 3.10+ (standard library only) for Rebooks; web retrieval/browser tools fo
 When a provider changes its site, required identity/stock metadata is not covered, or another reproducible incompleteness is found:
 1. Preserve completed search evidence outside the package, label the affected results incomplete and stop unsupported claims. Never report the failure as no results.
 2. Check existing upstream issues/PRs for the same gap. Reproduce with a minimal public or synthetic example; do not include personal queries, wishlists, credentials, account pages or copied site datasets.
-3. In an isolated checkout/fork, prepare the smallest correction to the affected adapter or procedure and a regression check. Run the inherited tests and the new check, and review the full diff. Do not edit a live installed skill or unrelated profiles.
+3. In an isolated checkout/fork, prepare the smallest correction to the affected adapter or procedure and a regression check. Run the helper and package test suites, and review the full diff. Do not edit a live installed skill or unrelated profiles.
 4. Obtain any required exact approval for the sanitized content, upstream repository, contribution branch and PR to `master`. Use existing authorized GitHub access (or an authorized fork); never ask for secrets in chat or request broad administrative permissions.
 5. Push the approved correction and open a PR, or update an existing equivalent PR when authorized. Explain the failure, expected/actual result, minimal reproduction, fix, validation and remaining limits. Read back the PR's head/base/SHA and changed files, and give the user its URL and real CI state. Do not merge, release or deploy.
 6. Missing permission, reproduction or network access is a blocker, not a waiver: retain a sanitized local patch/evidence and identify the concrete next step. In Kanban, record the blocker on the assigned card under the governing policy. Do not claim the contribution requirement is complete until a verified PR exists; do not silently continue claiming full coverage.
@@ -35,11 +35,17 @@ When a provider changes its site, required identity/stock metadata is not covere
 This is an explicit agent procedure, not automatic telemetry, background synchronization or an enforced licensing term. The package remains MIT-licensed. Do not open a PR for an unrelated site's temporary outage or an unverified guess; report the observation and establish a reproducible skill gap first.
 
 ## How to Run
-Resolve SKILL_DIR to this package directory. Through `terminal`, run:
+Resolve SKILL_DIR to this package directory. On Linux/macOS, through `terminal`, run:
 
 `python3 "SKILL_DIR/scripts/rebooks_search.py" "BOOK_TITLE" --mode title`
 
 `python3 "SKILL_DIR/scripts/rebooks_search.py" "AUTHOR_NAME" --mode author`
+
+On Windows PowerShell, use `py -3` if `python3` is unavailable:
+
+`py -3 "SKILL_DIR/scripts/rebooks_search.py" "BOOK_TITLE" --mode title`
+
+`py -3 "SKILL_DIR/scripts/rebooks_search.py" "AUTHOR_NAME" --mode author`
 
 Replace the quoted query placeholders with user-requested titles/authors. The helper is not configurable for another host. Its Python API is `search_books(query, mode='title', max_pages=30)`; import from the scripts directory. JSON contains query, mode, search_url, checked_at, pages, total and products. Products include id, title, authors, url, stock, price and exact_match.
 
@@ -53,10 +59,10 @@ Replace the quoted query placeholders with user-requested titles/authors. The he
 7. Persist completed queries to a user-selected JSON/JSONL file outside the package. Aggregate/deduplicate/count in Python. Report available, sold out, not found, uncertain and error separately, with coverage and timestamps. A timeout must not discard completed evidence or become zero results. Completion: every requested item is accounted for.
 
 ## Pitfalls
-- The helper preserves the original parser and retry behavior; see `references/site-limits.md` for known limitations. Unknown stock is returned as `unknown`, not availability.
+- The helper bounds author/price parsing to the product element and immediately propagates non-transient HTTP errors, including 403/429. See `references/site-limits.md` for remaining limitations. Unknown stock is `unknown`, not availability.
 - No results differs from sold out; a different copy may be in stock.
 - No branch-level stock or reservation is established by website stock.
 - No universal adapter, background monitoring, anti-bot bypass or automatic alias learning is shipped.
 
 ## Verification
-Through `terminal`: `python3 "SKILL_DIR/scripts/test_rebooks_search.py"` (16 offline regression tests). Run title and author searches live when access permits; counts are not fixed. Failures/timeouts are errors, not absence. Before reporting stock, perform step 6 independently. See README for clean extraction checks and tested platform limits.
+Through `terminal`, run `python3 "SKILL_DIR/scripts/test_rebooks_search.py"` (20 offline helper regressions) and `python3 -m unittest discover -s "SKILL_DIR/tests" -v` (3 package checks). On Windows PowerShell, use `py -3` in place of `python3`. Run title and author searches live only when access permits; counts are not fixed. Failures/timeouts are errors, not absence. Before reporting stock, perform step 6 independently. See README for clean extraction checks and tested platform limits.

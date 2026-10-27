@@ -1,12 +1,12 @@
 {
-  "CHANGELOG.md": "13300a6f4759cc0508c24022807faa5152f1e7ccc29ae904252fcf3a8f3b9105",
+  "CHANGELOG.md": "dd86224b6ab454f7d58802f330d8a02f1303744f69676d42fe139b74d8614823",
   "LICENSE": "1c05f348c6177914ba3b203919bf47df1b33fcaf8974293ea75a7f0b7ecaa0cb",
-  "README.md": "55449ae670af0f521b2f67d2a8507b3ebca8ea3dc2cc5b900efd3f61a07dde0e",
-  "SKILL.md": "eeff5c4e043e8d2bda39725e0c0c3d20ca378f7c91da7c35a42f0f9bb1343048",
-  "references/aliases.example.json": "93c147c442f7fbf65d953213b6168143866e05d26920468b2ce2c78d46356bb3",
-  "references/providers.md": "7b91850d464397df9b2c606112aa5fbf940c47df22b3eff45018215baac6e113",
-  "references/site-limits.md": "2e17d50c939d01b3fae3db8699b571f824bc1d686fd5c500d3eafa8921133eeb",
-  "scripts/rebooks_search.py": "bc51627b46baea4e35a76419aca7c7a79f0df040c93ea324128facabce0432ef",
-  "scripts/test_rebooks_search.py": "4cba80c100a6078b4264f3a4f5773eb6e7dd834dbbfdb2aad162b1cacc9a1804",
-  "tests/test_package.py": "e1f9e7a491af19925db376886319cc7de2db1e3afef1faf2b2631a37c287ff94"
+  "README.md": "8a6b86ce2ff033d2a98568ac89e7c7d15ae242b817715852a3301b4cf478afd8",
+  "SKILL.md": "701b70501f502e327de449ec2a446e16965846ec9d3fefa9b9d78702cefb23a3",
+  "references/aliases.example.json": "8a8fb455a9080e2d3ea95d2fc69b7e84dfe0605b2767f62e15edd9dfbc070ffa",
+  "references/providers.md": "fd666e670a6af4b43d621fd783290c9bf52a15b9c418f89ba155c8c0d35a9e13",
+  "references/site-limits.md": "ff34e1960b1afd633c34ed635e8262feeb8ab6d79d03ed8ce44a3475808aaee5",
+  "scripts/rebooks_search.py": "38900a254814f0a444ebe3f81ea2eea49d11db6429940ad3edaa8e3822d895e6",
+  "scripts/test_rebooks_search.py": "65fefc869d7ca1c495137926631358db3704656d05b0f602f139d6f16db07777",
+  "tests/test_package.py": "0ab19b410d5a57e47b235ec5b3cf285daa382eec2b788f3085e49d66f166b1ac"
 }

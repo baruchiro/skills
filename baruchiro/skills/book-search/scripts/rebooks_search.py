@@ -1,12 +1,14 @@
 """Deterministic, read-only Rebooks search; Python standard library only."""
 import argparse
 import html
+from html.parser import HTMLParser
 import json
 import re
 import time
 import unicodedata
 from datetime import datetime, timezone
 from urllib.parse import urlencode, urljoin, urlparse, quote
+from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 BASE = 'https://rebooks.org.il/'
@@ -25,23 +27,92 @@ def fetch(url):
         try:
             with urlopen(Request(url, headers={'User-Agent':'Mozilla/5.0'}),timeout=30) as response:
                 return response.read().decode('utf-8')
+        except HTTPError as error:
+            if error.code not in (408, 425) and not 500 <= error.code < 600:
+                raise
+            if attempt == 2:
+                raise
+            time.sleep(1+attempt)
         except Exception:
             if attempt == 2:
                 raise
             time.sleep(1+attempt)
 
+class _ProductDivParser(HTMLParser):
+    def __init__(self, source, predicate):
+        super().__init__(convert_charrefs=False)
+        self.source = source
+        self.predicate = predicate
+        self.line_starts = [0]
+        self.line_starts.extend(match.end() for match in re.finditer('\n', source))
+        self.active = []
+        self.blocks = []
+
+    def _offset(self):
+        line, column = self.getpos()
+        return self.line_starts[line - 1] + column
+
+    def handle_starttag(self, tag, attrs):
+        if tag.lower() != 'div':
+            return
+        for block in self.active:
+            block['depth'] += 1
+        attributes = dict(attrs)
+        if self.predicate(attributes):
+            self.active.append({
+                'attributes': attributes,
+                'content_start': self._offset() + len(self.get_starttag_text() or ''),
+                'depth': 1,
+            })
+
+    def handle_startendtag(self, tag, attrs):
+        if tag.lower() == 'div':
+            attributes = dict(attrs)
+            if self.predicate(attributes):
+                self.blocks.append((attributes, ''))
+
+    def handle_endtag(self, tag):
+        if tag.lower() != 'div':
+            return
+        end = self._offset()
+        finished = []
+        for block in self.active:
+            block['depth'] -= 1
+            if block['depth'] == 0:
+                finished.append(block)
+        self.active = [block for block in self.active if block['depth'] > 0]
+        self.blocks.extend(
+            (block['attributes'], self.source[block['content_start']:end])
+            for block in finished
+        )
+
+
+def _product_divs(source, predicate):
+    parser = _ProductDivParser(source, predicate)
+    parser.feed(source)
+    parser.close()
+    if parser.active:
+        raise ValueError('Product card element did not close')
+    return parser.blocks
+
+
 def parse_products(source):
-    starts = list(re.finditer(r'<div\b[^>]*class="([^"]*product-grid-item[^"]*)"[^>]*data-id="(\d+)"[^>]*>',source))
     products = {}
-    for i,m in enumerate(starts):
-        block=source[m.end():starts[i+1].start() if i+1<len(starts) else len(source)]
+    cards = _product_divs(
+        source,
+        lambda attrs: 'product-grid-item' in attrs.get('class', '').split(),
+    )
+    for attrs, block in cards:
+        product_id = attrs.get('data-id', '')
+        if not product_id.isdigit():
+            raise ValueError('Product card missing numeric data-id')
         title=re.search(r'<h[23]\b[^>]*class="[^"]*wd-entities-title[^"]*"[^>]*>\s*<a\b[^>]*href="([^"]+)"[^>]*>(.*?)</a>',block,re.S)
         if not title:
             raise ValueError('Product card title schema changed')
         authors=re.findall(r'<a\b[^>]*href="[^"]*/book-author/[^"]*"[^>]*>(.*?)</a>',block,re.S)
-        classes=m.group(1).split()
+        classes=attrs.get('class', '').split()
         price=re.search(r'<span class="woocommerce-Price-amount amount">(.*?)</bdi>',block,re.S)
-        p={'id':m.group(2),'title':text_of(title.group(2)),'authors':sorted(set(text_of(a) for a in authors)),'url':html.unescape(title.group(1)),'stock':'in_stock' if 'instock' in classes else 'out_of_stock' if 'outofstock' in classes else 'unknown','price':text_of(price.group(1)) if price else None}
+        p={'id':product_id,'title':text_of(title.group(2)),'authors':sorted(set(text_of(a) for a in authors)),'url':html.unescape(title.group(1)),'stock':'in_stock' if 'instock' in classes else 'out_of_stock' if 'outofstock' in classes else 'unknown','price':text_of(price.group(1)) if price else None}
         old=products.get(p['id'])
         if old and (old['title'],old['stock'])!=(p['title'],p['stock']):
             raise ValueError('Conflicting duplicate product cards')
@@ -61,18 +132,26 @@ def search_books(query,mode='title',max_pages=30):
             raise ValueError('Pagination limit exceeded; results are incomplete')
         source=fetch(url)
         visited.add(url)
-        main=re.search(r'<div[^>]*id="product-(\d+)"[^>]*class="([^"]+)"',source)
+        main_divs = _product_divs(
+            source,
+            lambda attrs: bool(re.fullmatch(r'product-\d+', attrs.get('id', '')))
+            and 'product' in attrs.get('class', '').split(),
+        )
+        main = main_divs[0] if main_divs else None
         if main:
-            title=re.search(r'<h1[^>]*>(.*?)</h1>',source,re.S)
+            main_attrs, body = main
+            main_id = re.fullmatch(r'product-(\d+)', main_attrs.get('id', ''))
+            if main_id is None:
+                raise ValueError('Product page has an invalid product id')
+            product_id = main_id.group(1)
+            title=re.search(r'<h1[^>]*>(.*?)</h1>',body,re.S)
             canonical=re.search(r'<link rel="canonical" href="([^"]+)"',source)
             if not title or not canonical:
                 raise ValueError('Unrecognized redirected product page')
-            classes=main.group(2).split()
-            end=source.find('product-grid-item',main.end())
-            body=source[main.end():end if end>0 else len(source)]
+            classes=main_attrs.get('class', '').split()
             authors=re.findall(r'<a\b[^>]*href="[^"]*/book-author/[^"]*"[^>]*>(.*?)</a>',body,re.S)
             price=re.search(r'<span class="woocommerce-Price-amount amount">(.*?)</bdi>',body,re.S)
-            cards=[{'id':main.group(1),'title':text_of(title.group(1)),'authors':sorted(set(text_of(a) for a in authors)),'url':html.unescape(canonical.group(1)),'stock':'in_stock' if 'instock' in classes else 'out_of_stock' if 'outofstock' in classes else 'unknown','price':text_of(price.group(1)) if price else None}]
+            cards=[{'id':product_id,'title':text_of(title.group(1)),'authors':sorted(set(text_of(a) for a in authors)),'url':html.unescape(canonical.group(1)),'stock':'in_stock' if 'instock' in classes else 'out_of_stock' if 'outofstock' in classes else 'unknown','price':text_of(price.group(1)) if price else None}]
         else:
             if 'תוצאות חיפוש עבור' not in source:
                 raise ValueError('Unexpected search page; do not interpret as no results')

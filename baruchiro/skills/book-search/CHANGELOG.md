@@ -1,15 +1,15 @@
 # Changelog
 
 ## 0.1.1
-- Removed preparation-only wording from the public README.
-- Documented skills CLI and existing Claude Code marketplace bundle installation, including the pre-merge limitation.
-- Listed named provider starting points with explicit automated-versus-generic coverage; no new scraper or live validation for other stores is claimed.
-- Added the required, consent-gated improvement-PR procedure, sanitized reproduction/testing, upstream target and blocked-permission handling. The MIT license is unchanged.
-- Added package integrity/link checks; inherited Python search code and 16 tests remain byte-identical.
-- This version is a package revision, not a merge, GitHub Release or live installation claim.
+- Bounded author and price extraction to each search-result or main-product element, with regression coverage for unrelated footer/sidebar metadata.
+- Stop immediately on non-transient HTTP errors, including 403/429; retain bounded retries for transient HTTP failures.
+- Added a clearly fictional alias example, Windows `py -3` commands, and explicit UTF-8 reads in package checks.
+- Kept the consent-gated improvement-PR procedure and provider coverage limits; the MIT license is unchanged.
+- Expanded validation to 20 offline helper regressions and 3 package checks.
+- Bumped the shared `baruchiro` plugin/marketplace metadata from 0.10.3 to 0.10.4. This remains a package revision, not a merge, GitHub Release or live installation claim.
 
 ## 0.1.0
-- Public candidate of generic book-search procedure, with Rebooks-only helper preserved byte-for-byte from rebooks-search 0.1.0.
+- Historical initial candidate of the generic book-search procedure; superseded by 0.1.1.
 - Removed personal wishlist paths, branch preferences, historical book inventory and learned personal aliases.
-- Added empty alias example, external-data instructions, access/parser limits, MIT license and clean-extraction checks.
+- Added external-data instructions, access/parser limits, MIT license and clean-extraction checks; 0.1.1 supplies a fictional alias entry.
 - No network reliability fix or new store adapter; no live skill changes, installation, push, PR or release.
