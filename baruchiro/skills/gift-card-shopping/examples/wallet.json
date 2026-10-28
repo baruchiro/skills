@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "data_kind": "synthetic",
+  "holdings": [
+    {
+      "id": "h1",
+      "label": "BUYME ALL - Birthday Gift",
+      "product_id": "buyme_all_gift",
+      "kind": "stored_value",
+      "status": "active",
+      "expires_on": "2027-12-31",
+      "balance": {
+        "amount_minor": 25000,
+        "currency": "ILS",
+        "reported_at": "2026-10-01T10:00:00Z",
+        "kind": "user_reported"
+      }
+    },
+    {
+      "id": "h2",
+      "label": "BUYME SELECT - Work Bonus",
+      "product_id": "buyme_select_gift",
+      "kind": "stored_value",
+      "status": "active",
+      "expires_on": "2026-11-30",
+      "balance": {
+        "amount_minor": 10000,
+        "currency": "ILS",
+        "reported_at": "2026-09-15T12:00:00Z",
+        "kind": "user_reported"
+      }
+    },
+    {
+      "id": "h3",
+      "label": "תו הזהב - Family Card",
+      "product_id": "tav_hazahav_classic_card",
+      "kind": "stored_value",
+      "status": "active",
+      "expires_on": "2028-06-30",
+      "balance": {
+        "amount_minor": 50000,
+        "currency": "ILS",
+        "reported_at": "2026-10-20T08:00:00Z",
+        "kind": "user_reported"
+      }
+    },
+    {
+      "id": "h4",
+      "label": "תו הזהב Membership",
+      "product_id": "tav_hazahav_membership",
+      "kind": "membership",
+      "status": "active",
+      "expires_on": "2027-12-31",
+      "balance": null
+    },
+    {
+      "id": "h5",
+      "label": "BUYME ALL - Expired",
+      "product_id": "buyme_all_gift",
+      "kind": "stored_value",
+      "status": "inactive",
+      "expires_on": "2025-12-31",
+      "balance": {
+        "amount_minor": 0,
+        "currency": "ILS",
+        "reported_at": "2025-12-01T10:00:00Z",
+        "kind": "user_reported"
+      }
+    }
+  ]
+}

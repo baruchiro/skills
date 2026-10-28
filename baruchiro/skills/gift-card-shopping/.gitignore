@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+wallet.json
+config.json
+catalog.json
+!examples/wallet.json
+!examples/config.json
+!examples/catalog.json
+cache/
+private/
+.env

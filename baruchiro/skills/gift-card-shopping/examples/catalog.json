@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "data_kind": "synthetic",
+  "issuers": [
+    {"id": "buyme", "name": "BUYME"},
+    {"id": "tav_hazahav", "name": "תו הזהב"}
+  ],
+  "programs": [
+    {"id": "buyme_all", "issuer_id": "buyme", "name": "BUYME ALL"},
+    {"id": "buyme_select", "issuer_id": "buyme", "name": "BUYME SELECT"},
+    {"id": "tav_hazahav_classic", "issuer_id": "tav_hazahav", "name": "תו הזהב קלאסי"}
+  ],
+  "products": [
+    {"id": "buyme_all_gift", "program_id": "buyme_all", "name": "BUYME ALL Gift Card", "kind": "stored_value"},
+    {"id": "buyme_select_gift", "program_id": "buyme_select", "name": "BUYME SELECT Gift Card", "kind": "stored_value"},
+    {"id": "tav_hazahav_classic_card", "program_id": "tav_hazahav_classic", "name": "תו הזהב כרטיס מגנטי", "kind": "stored_value"},
+    {"id": "tav_hazahav_membership", "program_id": "tav_hazahav_classic", "name": "תו הזהב מועדון חברים", "kind": "membership"}
+  ],
+  "merchants": [
+    {"id": "kravitz", "name": "Kravitz", "aliases": ["קריביץ", "קריביץ'"]},
+    {"id": "fox_home", "name": "FOX Home", "aliases": ["פוקס הום", "פוקס"]},
+    {"id": "zara", "name": "Zara", "aliases": ["זארה"]},
+    {"id": "ksp", "name": "KSP", "aliases": ["קיי אס פי"]}
+  ],
+  "sources": [
+    {"id": "buyme_dir_2026_10_01", "url": "https://example.invalid/issuer-directory", "publisher": "Synthetic issuer", "authority": "issuer_official", "checked_at": "2026-10-01T07:24:43Z", "evidence_excerpt": "SYNTHETIC: invented allow fixture, not merchant evidence"},
+    {"id": "kravitz_voucher_page", "url": "https://example.invalid/merchant-a", "publisher": "Synthetic merchant A", "authority": "merchant_official", "checked_at": "2026-10-15T10:00:00Z", "evidence_excerpt": "SYNTHETIC: invented physical acceptance fixture"},
+    {"id": "tav_hazahav_dir", "url": "https://example.invalid/program-directory", "publisher": "Synthetic program", "authority": "issuer_official", "checked_at": "2026-09-20T12:00:00Z", "evidence_excerpt": "SYNTHETIC: invented conditional fixture"},
+    {"id": "fox_home_page", "url": "https://example.invalid/merchant-b", "publisher": "Synthetic merchant B", "authority": "merchant_official", "checked_at": "2026-09-25T14:00:00Z", "evidence_excerpt": "SYNTHETIC: invented physical-only fixture"},
+    {"id": "zara_no_buyme", "url": "https://example.invalid/exclusion", "publisher": "Synthetic exclusion", "authority": "merchant_official", "checked_at": "2026-10-10T09:00:00Z", "evidence_excerpt": "SYNTHETIC: invented denial fixture, not a real exclusion"},
+    {"id": "ksp_buyme_online", "url": "https://example.invalid/online", "publisher": "Synthetic online merchant", "authority": "merchant_official", "checked_at": "2026-10-05T11:00:00Z", "evidence_excerpt": "SYNTHETIC: invented online-only fixture"}
+  ],
+  "rules": [
+    {"id": "r1", "product_id": "buyme_all_gift", "merchant_id": "kravitz", "effect": "allow", "benefit_type": "redemption", "scope": {"channels": ["physical"], "branch_ids": null, "seller_ids": null}, "conditions": [], "verification": "verified", "source_ids": ["buyme_dir_2026_10_01", "kravitz_voucher_page"], "valid_from": "2026-01-01", "valid_until": null},
+    {"id": "r2", "product_id": "buyme_select_gift", "merchant_id": "kravitz", "effect": "deny", "benefit_type": "redemption", "scope": {"channels": ["physical"], "branch_ids": null, "seller_ids": null}, "conditions": [], "verification": "verified", "source_ids": ["zara_no_buyme"], "valid_from": "2026-01-01", "valid_until": null},
+    {"id": "r3", "product_id": "tav_hazahav_classic_card", "merchant_id": "fox_home", "effect": "allow", "benefit_type": "redemption", "scope": {"channels": ["physical"], "branch_ids": null, "seller_ids": null}, "conditions": ["לא תקף במבצעים מיוחדים"], "verification": "verified", "source_ids": ["tav_hazahav_dir", "fox_home_page"], "valid_from": "2026-01-01", "valid_until": null},
+    {"id": "r4", "product_id": "buyme_all_gift", "merchant_id": "zara", "effect": "deny", "benefit_type": "redemption", "scope": {"channels": ["physical", "online"], "branch_ids": null, "seller_ids": null}, "conditions": [], "verification": "verified", "source_ids": ["zara_no_buyme"], "valid_from": "2026-01-01", "valid_until": null},
+    {"id": "r5", "product_id": "buyme_all_gift", "merchant_id": "ksp", "effect": "allow", "benefit_type": "redemption", "scope": {"channels": ["online"], "branch_ids": null, "seller_ids": null}, "conditions": [], "verification": "verified", "source_ids": ["ksp_buyme_online"], "valid_from": "2026-01-01", "valid_until": null},
+    {"id": "r6", "product_id": "tav_hazahav_membership", "merchant_id": "fox_home", "effect": "allow", "benefit_type": "discount", "scope": {"channels": ["physical"], "branch_ids": null, "seller_ids": null}, "conditions": ["הנחה 10% לחברי מועדון"], "verification": "unverified", "source_ids": [], "valid_from": "2026-01-01", "valid_until": null}
+  ]
+}
