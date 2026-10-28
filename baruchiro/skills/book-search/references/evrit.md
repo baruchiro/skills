@@ -21,12 +21,12 @@ Completion: digital listing and library-marker observation each have their own e
 
 ## Report and hand off
 
-Use a short result with:
+Keep the user-facing result short and decision-ready; omit search narration unless a gap affects confidence. Include only what is useful:
 - Verified book title, author and volume when relevant.
 - Direct canonical product URL.
 - Digital listing: present / not shown / unknown.
 - Library marker: exact observed label / not found in inspected details / unknown.
-- Checked-at timestamp and any failed search or incomplete page.
+- Checked-at timestamp or failed-search detail when freshness or a gap materially affects the result.
 
 An affirmative marker means the website marks this title for its public-library program. It does **not** establish a specific library's licensing, current code quota, user eligibility or a successful loan. If the user requests a loan, keep the library address, past correspondence, previous redemption date and waiting-period policy in separate user-owned records, never this public skill. Do not hardcode a library or a universal waiting period. Distinguish request date, code issue date and actual redemption/loan date; compute dates with tools, flag an unelapsed interval, and follow the user's approval boundaries before drafting/sending anything.
 

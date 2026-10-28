@@ -19,6 +19,9 @@ Find books across user-selected stores using a repeatable, read-only procedure. 
 - For עברית / e-vrit digital books and public-library eligibility, load [the e-vrit procedure](references/evrit.md) before searching. Verify the exact main-book marker, not merely a digital format.
 - Do not use for checkout, reservations, bypassing access controls or scheduled crawling.
 
+## Reporting style
+Keep findings concise and decision-ready: state the verified book/edition and link, then separate format from availability or eligibility. Label unknowns explicitly; never pad a simple lookup with process narration, unsupported inferences, plot details or repeated caveats.
+
 ## Prerequisites
 Python 3.10+ (standard library only) for Rebooks; web retrieval/browser tools for other stores and final product checks. Search needs no credentials or API keys; improvement PRs require separately authorized GitHub access. Ask which stores if not specified. Read site restrictions before access; see `references/site-limits.md`. Named providers and their exact coverage (Rebooks, e-vrit, Steimatzky, Tzomet Sfarim) are listed in `references/providers.md`; only Rebooks has a tested executable adapter.
 
