@@ -11,7 +11,7 @@ Personal Claude Code skills marketplace.
 | Plugin | What it gives you |
 |---|---|
 | `baruchiro` | Baruch's personal skills and agents |
-| `pr-review-loop` | Drain review threads on your own PRs and track each PR's status in `pr-status.json`; pair it with the [PR Status VS Code extension](https://marketplace.visualstudio.com/items?itemName=baruchiro.pr-status-vscode) |
+| `pr-review-loop` | Drain review threads on your own PRs and track each PR's status in `pr-status.json`; pair it with the [PR Status VS Code extension](https://marketplace.visualstudio.com/items?itemName=baruchiro.pr-review-loop) |
 | `waiting-light` | Flips a Home Assistant `input_boolean` while a session is waiting on you, so a light can signal it. See [waiting-light/README.md](waiting-light/README.md) |
 
 ```
@@ -61,4 +61,4 @@ waiting-light/
 
 | Skill | What it does |
 |---|---|
-| `resolving-pr-review-comments` | Drain unresolved review threads on your own PRs — fetch, reply, resolve, check CI. Writes `pr-status.md` / `pr-status.json`, which the [PR Status VS Code extension](https://marketplace.visualstudio.com/items?itemName=baruchiro.pr-status-vscode) shows in a sidebar |
+| `resolving-pr-review-comments` | Drain unresolved review threads on your own PRs — fetch, reply, resolve, check CI. Writes `pr-status.md` / `pr-status.json`, which the [PR Status VS Code extension](https://marketplace.visualstudio.com/items?itemName=baruchiro.pr-review-loop) shows in a sidebar |
