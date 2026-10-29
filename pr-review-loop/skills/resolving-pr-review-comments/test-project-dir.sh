@@ -19,6 +19,7 @@ git -C "$sandbox/solo" init -q
 expect "workspace folder" "$(cd "$sandbox/workspace/repo/src" && "$SCRIPT")" "$sandbox/workspace"
 expect "git root" "$(cd "$sandbox/solo/src" && "$SCRIPT")" "$sandbox/solo"
 expect "excluded from git" "$(grep -c '^/pr-status.md$' "$sandbox/solo/.git/info/exclude")" "1"
+expect "json excluded from git" "$(grep -c '^/pr-status.json$' "$sandbox/solo/.git/info/exclude")" "1"
 (cd "$sandbox/solo" && "$SCRIPT" >/dev/null)
 expect "exclude not duplicated" "$(grep -c '^/pr-status.md$' "$sandbox/solo/.git/info/exclude")" "1"
 expect "plain folder" "$(cd "$sandbox/plain" && "$SCRIPT")" "$sandbox/plain"

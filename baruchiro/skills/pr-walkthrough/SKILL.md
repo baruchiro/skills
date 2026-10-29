@@ -90,7 +90,7 @@ Present what `next` returns: flow position, the diff, a couple sentences of cont
 
 ### 5. Submit comments
 
-When the user is done (or asks to wrap up early): for each repo, run `scripts/store.sh comments <state-file>` to collect its recorded comments, summarize them, and **ask before posting anything**. On confirmation, dispatch the `code-review-publish` agent (`agents/code-review-publish.md` in this plugin — invoke via the Agent tool, `subagent_type: personal:code-review-publish`) with the PR reference and a findings list built from each comment: `description` = body, `severity` = "P3" (informational — these are walkthrough remarks, not a formal review), `evidence` = the chunk's `diff`, `fix` = omit unless the user gave one. Never auto-post; one dispatch per repo/PR.
+When the user is done (or asks to wrap up early): for each repo, run `scripts/store.sh comments <state-file>` to collect its recorded comments, summarize them, and **ask before posting anything**. On confirmation, dispatch the `code-review-publish` agent (`agents/code-review-publish.md` in this plugin — invoke via the Agent tool, `subagent_type: baruchiro:code-review-publish`) with the PR reference and a findings list built from each comment: `description` = body, `severity` = "P3" (informational — these are walkthrough remarks, not a formal review), `evidence` = the chunk's `diff`, `fix` = omit unless the user gave one. Never auto-post; one dispatch per repo/PR.
 
 ## Quick Reference
 

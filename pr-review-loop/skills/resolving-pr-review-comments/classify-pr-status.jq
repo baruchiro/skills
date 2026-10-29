@@ -38,8 +38,14 @@ def classifyPr($marker):
   (if $pr.isDraft then "draft" else "ready" end) as $phase |
   def result($state; $next; $hint):
     {repo: $pr.repo, number: $pr.number, title: $pr.title, url: $pr.url, base: $pr.baseRefName,
-     phase: $phase, status: ($phase + ":" + $state), next: $next, hint: $hint};
-  if ($owners | any(. == "you")) then
+     phase: $phase, status: ($phase + ":" + $state), next: $next, hint: $hint,
+     state: ($pr.state // "OPEN"), headRefName: $pr.headRefName, headRefOid: $pr.headRefOid,
+     threads: ($owners | map(select(. == ({"needs-you": "you", "needs-agent": "agent"}[$state] // null))) | length)};
+  if $pr.state == "MERGED" then
+    result("merged"; "none"; "merged") | .status = "merged"
+  elif $pr.state == "CLOSED" then
+    result("closed"; "none"; "closed without merging") | .status = "closed"
+  elif ($owners | any(. == "you")) then
     result("needs-you"; "you"; "\($owners | map(select(. == "you")) | length) open thread(s) waiting for your read, answer, 👍 or resolve")
   elif ($owners | any(. == "agent")) then
     result("needs-agent"; "claude"; "\($owners | map(select(. == "agent")) | length) open thread(s) for Claude to answer or fix")
