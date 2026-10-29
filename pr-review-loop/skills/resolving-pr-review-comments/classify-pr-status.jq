@@ -29,6 +29,7 @@ def classifyPr($marker):
   ($pr.commits.nodes[0].commit.statusCheckRollup.contexts.nodes // [] | latestRuns) as $checks |
   ($checks | map(select(checkName | ascii_downcase | contains("coderabbit")))) as $crChecks |
   ($checks - $crChecks) as $ciChecks |
+  ($ciChecks | map(checkState) | if any(. == "failed") then "failing" elif any(. == "pending") then "pending" elif length > 0 then "ok" else "none" end) as $ci |
   ($pr.reviews.nodes | map(select(isCoderabbit))) as $crReviews |
   ($pr.comments.nodes | map(select(isCoderabbit))) as $crComments |
   ($crReviews | any(.commit.oid == $pr.headRefOid)) as $crReviewedHead |
@@ -39,7 +40,7 @@ def classifyPr($marker):
   def result($state; $next; $hint):
     {repo: $pr.repo, number: $pr.number, title: $pr.title, url: $pr.url, base: $pr.baseRefName,
      phase: $phase, status: ($phase + ":" + $state), next: $next, hint: $hint,
-     state: ($pr.state // "OPEN"), headRefName: $pr.headRefName, headRefOid: $pr.headRefOid,
+     ci: $ci, state: ($pr.state // "OPEN"), headRefName: $pr.headRefName, headRefOid: $pr.headRefOid,
      threads: ($owners | map(select(. == ({"needs-you": "you", "needs-agent": "agent"}[$state] // null))) | length)};
   if $pr.state == "MERGED" then
     result("merged"; "none"; "merged") | .status = "merged"

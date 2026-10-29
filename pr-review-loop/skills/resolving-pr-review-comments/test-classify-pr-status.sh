@@ -64,6 +64,10 @@ STATE=CLOSED check closed true "[]" "[]" "[]" "[]"
 [ "$(field threads true "[$human,$human]" "[]" "[]" "[]")" = 2 ] || { echo "FAIL: threads agent" >&2; exit 1; }
 [ "$(field threads true "[$answered]" "[]" "[]" "[]")" = 1 ] || { echo "FAIL: threads you" >&2; exit 1; }
 [ "$(field threads false "[]" "[$ci_ok,$cr_done]" "$cr_review_head" "[]")" = 0 ] || { echo "FAIL: threads none" >&2; exit 1; }
+[ "$(field ci false "[$cr_unliked]" "[$ci_wait,$cr_done]" "$cr_review_head" "[]")" = pending ] || { echo "FAIL: ci pending behind needs-you" >&2; exit 1; }
+[ "$(field ci false "[]" "[$ci_ok_then_bad,$cr_run]" "[]" "[]")" = failing ] || { echo "FAIL: ci failing" >&2; exit 1; }
+[ "$(field ci false "[]" "[$ci_ok,$cr_done]" "$cr_review_head" "[]")" = ok ] || { echo "FAIL: ci ok" >&2; exit 1; }
+[ "$(field ci true "[]" "[$cr_done]" "[]" "[]")" = none ] || { echo "FAIL: ci none" >&2; exit 1; }
 [ "$(field headRefName true "[]" "[]" "[]" "[]")" = feat ] || { echo "FAIL: headRefName" >&2; exit 1; }
 
 sha=9f3c2a1b7e4d5c6f8a0b1c2d3e4f5a6b7c8d9e0f
