@@ -83,7 +83,7 @@ Step 4's CI check only reflects what's already on the remote. If any Step 3 agen
 
 ## Status report (on demand, and at the end of every pass)
 
-When the user asks where their PRs stand, and as the last line of every pass, run `pr-status.sh OWNER/REPO#N [OWNER/REPO#N ...]` and render its JSON as a table: PR (linked), title, base, status, whose turn (`next`), `hint`, and review order (`reviewOrder`: a short `[open](url)` link, `stale`, or empty). Keep the rows in the order the script printed them, which is the order you passed. The script also always writes the same table to `pr-status.md` in the project folder (override with `PR_STATUS_FILE`), PRs in the order given, so the user and anyone on the project can keep it open and walk the PRs in order after the conversation has scrolled on. `project-dir.sh` picks the project folder: the nearest folder below `$HOME` with a `*.code-workspace` file (a multi-repo workspace, so one file covers PRs from every repo in it), else the git repo root, else the current folder. Inside a git repo it adds both files to `info/exclude`, so they never get committed. Run the script from the folder of the work, never from the home folder.
+When the user asks where their PRs stand, and as the last line of every pass, run `pr-status.sh OWNER/REPO#N [OWNER/REPO#N ...]` and render its JSON as a table: PR (linked), title, base, status, whose turn (`next`), `hint`, and review order (`reviewOrder`: a short `[open](url)` link, `stale`, or empty). Keep the rows in the order the script printed them, which is the order you passed. The script also always writes the same table to `pr-status.md` in the project folder (override with `PR_STATUS_FILE`), and the same data as `pr-status.json` beside it (override with `PR_STATUS_JSON_FILE`; each PR also carries `state`, `headRefName`, `headRefOid` and `threads`, the open-thread count behind a needs-you or needs-agent status), PRs in the order given, so the user and anyone on the project can keep it open and walk the PRs in order after the conversation has scrolled on. `project-dir.sh` picks the project folder: the nearest folder below `$HOME` with a `*.code-workspace` file (a multi-repo workspace, so one file covers PRs from every repo in it), else the git repo root, else the current folder. Inside a git repo it adds both files to `info/exclude`, so they never get committed. Run the script from the folder of the work, never from the home folder.
 
 The **Review order** column comes from `pr-review-links.json` in the same project folder (override with `PR_REVIEW_LINKS_FILE`), which the next section fills. `reviewOrder` is the recorded `/pr-review-sorter` link only while the PR's head is still the commit the link was built against; after a newer push it is `stale`, and it is `null` (empty cell) when no link was ever recorded.
 
@@ -100,6 +100,7 @@ The user works each PR through two loops. **Draft** is the review loop between t
 - `ready:cr-no-activity` — no CodeRabbit check, review or comment at all. Possibly still starting; if it persists, check the base branch manually or suggest commenting `@coderabbitai review`
 - `ready:ci-pending` — waiting for CI
 - `ready:ready` — merge candidate
+- `merged` / `closed` — the PR is already merged, or closed without merging; nothing left to do (`next` is `none`)
 
 ## Review-order links for changed PRs (end of every pass)
 

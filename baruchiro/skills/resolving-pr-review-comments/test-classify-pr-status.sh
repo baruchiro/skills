@@ -9,9 +9,14 @@ classify() {
   jq -L "$SCRIPT_DIR" --arg marker "$MARKER" -r 'include "classify-pr-status"; classifyPr($marker) | .status' <<<"$1"
 }
 
+field() {
+  local name=$1; shift
+  jq -L "$SCRIPT_DIR" --arg marker "$MARKER" -r "include \"classify-pr-status\"; classifyPr(\$marker) | .$name" <<<"$(pr "$@")"
+}
+
 pr() {
   jq -n -c "{
-    repo: \"o/r\", number: 1, title: \"t\", url: \"u\", baseRefName: \"main\", headRefOid: \"head\", isDraft: $1,
+    repo: \"o/r\", number: 1, title: \"t\", url: \"u\", baseRefName: \"main\", headRefOid: \"head\", state: \"${STATE:-OPEN}\", headRefName: \"feat\", isDraft: $1,
     reviewThreads: {nodes: $2}, reviews: {nodes: $4}, comments: {nodes: $5},
     commits: {nodes: [{commit: {statusCheckRollup: {contexts: {nodes: $3}}}}]}
   }"
@@ -53,6 +58,13 @@ check ready:ready false "[]" "[$ci_ok,$cr_done]" "$cr_review_head" "[]"
 check ready:ready false "[]" "[$ci_cancelled_then_ok,$cr_done]" "$cr_review_head" "[]"
 check ready:ci-failing false "[]" "[$ci_ok_then_bad,$cr_done]" "$cr_review_head" "[]"
 check ready:needs-you false "[$cr_unliked]" "[$ci_ok,$cr_done]" "$cr_review_head" "[]"
+STATE=MERGED check merged false "[$human]" "[]" "[]" "[]"
+STATE=CLOSED check closed true "[]" "[]" "[]" "[]"
+[ "$(STATE=MERGED field next false "[]" "[]" "[]" "[]")" = none ] || { echo "FAIL: merged next" >&2; exit 1; }
+[ "$(field threads true "[$human,$human]" "[]" "[]" "[]")" = 2 ] || { echo "FAIL: threads agent" >&2; exit 1; }
+[ "$(field threads true "[$answered]" "[]" "[]" "[]")" = 1 ] || { echo "FAIL: threads you" >&2; exit 1; }
+[ "$(field threads false "[]" "[$ci_ok,$cr_done]" "$cr_review_head" "[]")" = 0 ] || { echo "FAIL: threads none" >&2; exit 1; }
+[ "$(field headRefName true "[]" "[]" "[]" "[]")" = feat ] || { echo "FAIL: headRefName" >&2; exit 1; }
 
 sha=9f3c2a1b7e4d5c6f8a0b1c2d3e4f5a6b7c8d9e0f
 review_order() {

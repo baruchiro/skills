@@ -27,7 +27,7 @@ query='
 query($owner:String!, $repo:String!, $pr:Int!) {
   repository(owner:$owner, name:$repo) {
     pullRequest(number:$pr) {
-      number title url isDraft baseRefName headRefOid
+      number title url isDraft baseRefName headRefOid state headRefName
       reviewThreads(first:100) {
         pageInfo { hasNextPage }
         nodes {
