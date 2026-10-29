@@ -72,7 +72,7 @@ Reuse the report's own P1/P2/P3 ↔ emoji mapping verbatim — don't invent a di
 
 **The last line is the agent-reply marker and is required on every comment.** It renders as nothing on GitHub. It is how the `resolving-pr-review-comments` skill tells an agent's comment from a human's — without it, that skill hands your own comments back as unanswered human feedback the next time it drains the PR.
 
-Its single source of truth is `shared/agent-reply-marker.txt` in this plugin. The string above is a mirror of that file; if the two ever disagree, the file wins — read it and use its contents verbatim. (`shared/test-agent-reply-marker.sh` fails the moment they drift.)
+Its single source of truth is `shared/agent-reply-marker.txt` in this plugin; the `pr-review-loop` plugin, which holds the `resolving-pr-review-comments` skill, keeps an identical copy. The string above is a mirror of that file; if the two ever disagree, the file wins — read it and use its contents verbatim. (`shared/test-agent-reply-marker.sh` fails the moment they drift.)
 
 ## Rules
 

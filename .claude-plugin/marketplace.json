@@ -10,7 +10,13 @@
       "name": "baruchiro",
       "source": "./baruchiro",
       "description": "Baruch Odem's personal Claude Code skills and agents",
-      "version": "0.11.0"
+      "version": "0.12.0"
+    },
+    {
+      "name": "pr-review-loop",
+      "source": "./pr-review-loop",
+      "description": "Drain review threads on your own PRs and track each PR's status (pr-status.md / pr-status.json)",
+      "version": "0.1.0"
     },
     {
       "name": "waiting-light",
