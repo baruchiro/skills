@@ -3,7 +3,9 @@
 #
 # Usage: pr-status.sh OWNER/REPO#NUMBER [OWNER/REPO#NUMBER ...]
 # Prints a JSON array and always writes the same data as a Markdown table to
-# $PR_STATUS_FILE (default <project folder>/pr-status.md, see project-dir.sh), PRs in the order given.
+# $PR_STATUS_FILE (default <project folder>/pr-status.md, see project-dir.sh), PRs in the order given,
+# and as {version, generatedAt, prs} to $PR_STATUS_JSON_FILE (default <project folder>/pr-status.json)
+# for the PR Status VS Code extension.
 # Classification lives in classify-pr-status.jq. Review-order links are read from
 # $PR_REVIEW_LINKS_FILE (default <project folder>/pr-review-links.json), written by the agent.
 set -euo pipefail
@@ -12,6 +14,7 @@ tmp=$(mktemp); trap 'rm -f "$tmp"' EXIT
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$("$SCRIPT_DIR/project-dir.sh")"
 STATUS_FILE="${PR_STATUS_FILE:-$PROJECT_DIR/pr-status.md}"
+JSON_FILE="${PR_STATUS_JSON_FILE:-$PROJECT_DIR/pr-status.json}"
 LINKS_FILE="${PR_REVIEW_LINKS_FILE:-$PROJECT_DIR/pr-review-links.json}"
 
 [ $# -gt 0 ] || { echo "Usage: $0 OWNER/REPO#NUMBER [...]" >&2; exit 1; }
@@ -60,3 +63,6 @@ jq -r --arg now "$(date '+%Y-%m-%d %H:%M')" '
     "# PR status — \($now)\n\n| # | PR | Status | Turn | Hint | Review order |\n|---|---|---|---|---|---|",
     (to_entries[] | "| \(.key + 1) | [\(.value.repo)#\(.value.number)](\(.value.url)) \(.value.title | gsub("\\|"; "/")) | `\(.value.status)` | \(.value.next) | \(.value.hint | gsub("\n"; " ") | gsub("\\|"; "/")) | \(.value.reviewOrder | if . == null then "" elif . == "stale" then "stale" else "[open](\(.))" end) |")
   ' "$tmp" > "$STATUS_FILE"
+# Rename into place so a file watcher never reads a half-written file.
+jq --arg now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" '{version: 1, generatedAt: $now, prs: .}' "$tmp" >"$JSON_FILE.tmp"
+mv "$JSON_FILE.tmp" "$JSON_FILE"
