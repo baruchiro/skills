@@ -10,12 +10,12 @@
 # $PR_REVIEW_LINKS_FILE (default <project folder>/pr-review-links.json), written by the agent.
 set -euo pipefail
 
-tmp=$(mktemp); trap 'rm -f "$tmp"' EXIT
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$("$SCRIPT_DIR/project-dir.sh")"
 STATUS_FILE="${PR_STATUS_FILE:-$PROJECT_DIR/pr-status.md}"
 JSON_FILE="${PR_STATUS_JSON_FILE:-$PROJECT_DIR/pr-status.json}"
 LINKS_FILE="${PR_REVIEW_LINKS_FILE:-$PROJECT_DIR/pr-review-links.json}"
+tmp=$(mktemp); trap 'rm -f "$tmp" "$JSON_FILE.tmp"' EXIT
 
 [ $# -gt 0 ] || { echo "Usage: $0 OWNER/REPO#NUMBER [...]" >&2; exit 1; }
 
