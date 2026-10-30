@@ -48,6 +48,7 @@ waiting-light/
 | `pr-readiness-verdict` | Quick pass: fast SAFE/RISKY/BREAKING verdict on a PR or diff, including whether it's even ready to review (stalled vs. active) |
 | `pr-walkthrough` | Deep pass: review a PR (or matching PRs across repos) interactively, chunk by chunk |
 | `test-quality-rubric` | Judge whether an existing unit test earns its keep — Delete, Merge or Rewrite |
+| `working-in-a-fork` | Fork workflow: `main` mirrors upstream, `release` is your production branch, every feature goes to both |
 
 ### Agents
 
