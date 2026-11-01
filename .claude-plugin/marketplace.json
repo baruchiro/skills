@@ -16,7 +16,7 @@
       "name": "pr-review-loop",
       "source": "./pr-review-loop",
       "description": "Drain review threads on your own PRs and track each PR's status (pr-status.md / pr-status.json)",
-      "version": "0.1.2"
+      "version": "0.1.3"
     },
     {
       "name": "waiting-light",
