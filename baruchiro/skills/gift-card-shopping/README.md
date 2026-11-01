@@ -8,17 +8,30 @@
 
 הכלי לא קונה או מממש שוברים, לא מסנכרן יתרות ולא מבטיח שהקופה תכבד שובר. אין בחבילה קטלוג חנויות אמיתי. זהו מועמד בגרסה 0.1.0 עם [מגבלות ידועות](references/limits.md), ולא מוצר שנבדק במלואו. הבדיקות והדוגמאות משתמשות בנתונים סינתטיים בלבד ואינן הוכחה לשימוש בארנק אמיתי או לקבלת שובר בחנות.
 
-## התקנה למשתמשים
+## התקנה
 
-אפשר להתקין באמצעות כלי [skills של Vercel Labs](https://github.com/vercel-labs/skills), בסוכן שנתמך על ידו, למשל Claude Code או Codex. לפי התיעוד הרשמי של המתקין נדרשת סביבת Node.js בגרסה 22.20 ומעלה. פקודת ההתקנה אינה משתמשת ב-Python:
+### התקנה ב־Claude Code
+
+בתוך Claude Code:
+
+```text
+/plugin marketplace add baruchiro/skills
+/plugin install baruchiro@skills
+```
+
+בחרו את היקף ההתקנה ובדקו את רכיבי התוסף לפני האישור. זו התקנת חבילת `baruchiro`, שכוללת גם סקילים ורכיבים נוספים. להפעלת הסקיל: `/baruchiro:gift-card-shopping`. ראו [תיעוד התוספים הרשמי](https://code.claude.com/docs/en/discover-plugins).
+
+### התקנת הסקיל בלבד
+
+באמצעות [המתקין של Vercel Labs](https://github.com/vercel-labs/skills), עם Node.js בגרסה 22.20 ומעלה, הריצו מתוך הפרויקט:
 
 ```sh
 npx skills add https://github.com/baruchiro/skills/tree/master/baruchiro/skills/gift-card-shopping
 ```
 
-הריצו מתוך הפרויקט שבו תרצו להשתמש בסקיל, בחרו את הסוכן במסך ההתקנה ובדקו את היעד לפני האישור. ברירת המחדל היא התקנה לפרויקט הנוכחי; להתקנה לכל הפרויקטים אפשר להוסיף `-g`. התחביר לכתובת של תיקיית סקיל והאפשרויות מתועדים ב[מדריך הרשמי להתקנה](https://github.com/vercel-labs/skills/blob/main/docs/commands.md#skills-add). אל תתקינו במקביל את הטיוטה הישנה `merchant-voucher-lookup` לאותה מטרה.
+בחרו את הסוכן במסך ההתקנה. להתקנה לכל הפרויקטים הוסיפו `-g`; לבחירה מפורשת ב־Claude Code הוסיפו `--agent claude-code`. ראו [תיעוד המתקין](https://github.com/vercel-labs/skills/blob/main/docs/commands.md#skills-add).
 
-לאחר ההתקנה אפשר לבקש מהסוכן: "בדוק אילו שוברים עשויים להתאים לחנות שבחרתי. שאל אותי על סוג השובר וערוץ הקנייה אם חסר מידע, ואל תפתח קבצים פרטיים בלי אישורי." למחקר במקורות ציבוריים הסוכן זקוק לכלי גישה לרשת. העזר המקומי האופציונלי דורש Python 3.10 ומעלה; התקנת הסקיל לא מתקינה את סביבת ההרצה ולא מכינה את הקבצים החיצוניים עבורכם.
+אל תתקינו במקביל את הטיוטה הישנה `merchant-voucher-lookup` לאותה מטרה. למחקר במקורות ציבוריים הסוכן זקוק לגישה לרשת. העזר המקומי האופציונלי דורש Python 3.10 ומעלה וקבצים חיצוניים מאושרים; התקנת הסקיל לא מכינה אותם.
 
 ## פרטיות והסכמה לפני שימוש
 
@@ -30,7 +43,7 @@ npx skills add https://github.com/baruchiro/skills/tree/master/baruchiro/skills/
 
 ## מידע למתחזקים: מבנה, הדגמה ובדיקות
 
-הסעיפים הבאים מתעדים את המועמד הקיים ואת בדיקות הפיתוח. פקודות Python כאן מיועדות להרצת העזר והבדיקות, ולא להתקנת הסקיל.
+הסעיפים הבאים מתעדים את המועמד הקיים ואת בדיקות הפיתוח.
 
 Migration and extension of the gift-card shopping procedure, with a local reverse-lookup helper previously drafted as `merchant-voucher-lookup`. One skill directory covers both research and lookup; no second live skill is installed.
 
