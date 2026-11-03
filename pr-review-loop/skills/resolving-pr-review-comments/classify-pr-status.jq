@@ -33,14 +33,15 @@ def classifyPr($marker):
   ($pr.reviews.nodes | map(select(isCoderabbit))) as $crReviews |
   ($pr.comments.nodes | map(select(isCoderabbit))) as $crComments |
   ($crReviews | any(.commit.oid == $pr.headRefOid)) as $crReviewedHead |
-  ($crChecks | any(checkState == "pending")) as $crRunning |
+  # The summary comment says so while a review runs, even when no pending status is posted.
+  (($crChecks | any(checkState == "pending")) or ($crComments | any(.body | contains("Currently processing new changes")))) as $crRunning |
   ($crChecks | any(checkState == "ok")) as $crCheckOk |
   ($crComments | map(select(.body | test(skipPattern; "i"))) | last) as $skipComment |
   (if $pr.isDraft then "draft" else "ready" end) as $phase |
   def result($state; $next; $hint):
     {repo: $pr.repo, number: $pr.number, title: $pr.title, url: $pr.url, base: $pr.baseRefName,
      phase: $phase, status: ($phase + ":" + $state), next: $next, hint: $hint,
-     ci: $ci, state: ($pr.state // "OPEN"), headRefName: $pr.headRefName, headRefOid: $pr.headRefOid,
+     ci: $ci, cr: (if $crRunning then "running" else "idle" end), state: ($pr.state // "OPEN"), headRefName: $pr.headRefName, headRefOid: $pr.headRefOid,
      threads: ($owners | map(select(. == ({"needs-you": "you", "needs-agent": "agent"}[$state] // null))) | length)};
   if $pr.state == "MERGED" then
     result("merged"; "none"; "merged") | .status = "merged"

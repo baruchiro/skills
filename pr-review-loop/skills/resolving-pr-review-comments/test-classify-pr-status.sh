@@ -35,6 +35,7 @@ cr_run='{name:"CodeRabbit",status:"IN_PROGRESS",conclusion:null}'
 cr_done='{name:"CodeRabbit",status:"COMPLETED",conclusion:"SUCCESS"}'
 cr_review_head='[{author:{login:"coderabbitai"},commit:{oid:"head"}}]'
 cr_review_old='[{author:{login:"coderabbitai"},commit:{oid:"old"}}]'
+cr_processing='[{author:{login:"coderabbitai"},body:"Note\n\nCurrently processing new changes in this PR. This may take a few minutes, please wait..."}]'
 cr_skip='[{author:{login:"coderabbitai"},body:"Review skipped: base branch is not the default"}]'
 
 check() {
@@ -51,6 +52,8 @@ check draft:clean true "[]" "[]" "[]" "[]"
 check ready:ci-failing false "[]" "[$ci_bad,$cr_done]" "$cr_review_head" "[]"
 check ready:cr-pending false "[]" "[$ci_ok,$cr_run]" "[]" "[]"
 check ready:cr-pending false "[]" "[$ci_ok]" "$cr_review_old" "[]"
+check ready:cr-pending false "[]" "[$ci_ok,$cr_done]" "$cr_review_old" "$cr_processing"
+check ready:cr-pending false "[]" "[$ci_ok]" "$cr_review_head" "$cr_processing"
 check ready:cr-not-triggered false "[]" "[$ci_ok]" "[]" "$cr_skip"
 check ready:cr-no-activity false "[]" "[$ci_ok]" "[]" "[]"
 check ready:ci-pending false "[]" "[$ci_wait,$cr_done]" "$cr_review_head" "[]"
@@ -68,6 +71,9 @@ STATE=CLOSED check closed true "[]" "[]" "[]" "[]"
 [ "$(field ci false "[]" "[$ci_ok_then_bad,$cr_run]" "[]" "[]")" = failing ] || { echo "FAIL: ci failing" >&2; exit 1; }
 [ "$(field ci false "[]" "[$ci_ok,$cr_done]" "$cr_review_head" "[]")" = ok ] || { echo "FAIL: ci ok" >&2; exit 1; }
 [ "$(field ci true "[]" "[$cr_done]" "[]" "[]")" = none ] || { echo "FAIL: ci none" >&2; exit 1; }
+[ "$(field cr false "[$cr_unliked]" "[$ci_ok,$cr_run]" "$cr_review_old" "[]")" = running ] || { echo "FAIL: cr running behind needs-you" >&2; exit 1; }
+[ "$(field cr false "[$cr_unliked]" "[$ci_ok]" "$cr_review_head" "$cr_processing")" = running ] || { echo "FAIL: cr processing comment" >&2; exit 1; }
+[ "$(field cr false "[]" "[$ci_ok,$cr_done]" "$cr_review_head" "[]")" = idle ] || { echo "FAIL: cr idle" >&2; exit 1; }
 [ "$(field headRefName true "[]" "[]" "[]" "[]")" = feat ] || { echo "FAIL: headRefName" >&2; exit 1; }
 
 sha=9f3c2a1b7e4d5c6f8a0b1c2d3e4f5a6b7c8d9e0f
