@@ -21,7 +21,10 @@ def checkState:
   elif (.state | IN("PENDING", "EXPECTED")) then "pending"
   else "failed" end;
 
-def skipPattern: "skip|base branch|target branch|paused|not enabled";
+# Every CodeRabbit summary carries hidden "skip review" markers and an agent prompt saying "skip the rest",
+# so match visible text only, and "skipped" rather than "skip".
+def skipPattern: "skipped|not reviewed|base branch|target branch|paused|not enabled";
+def visibleText: gsub("<!--[\\s\\S]*?-->"; "") | gsub("<[^>]*>"; "") | gsub("\\s+"; " ") | ltrimstr(" ");
 
 def classifyPr($marker):
   . as $pr |
@@ -36,7 +39,7 @@ def classifyPr($marker):
   # The summary comment says so while a review runs, even when no pending status is posted.
   (($crChecks | any(checkState == "pending")) or ($crComments | any(.body | contains("Currently processing new changes")))) as $crRunning |
   ($crChecks | any(checkState == "ok")) as $crCheckOk |
-  ($crComments | map(select(.body | test(skipPattern; "i"))) | last) as $skipComment |
+  ($crComments | map(.body |= visibleText | select(.body | test(skipPattern; "i"))) | last) as $skipComment |
   (if $pr.isDraft then "draft" else "ready" end) as $phase |
   def result($state; $next; $hint):
     {repo: $pr.repo, number: $pr.number, title: $pr.title, url: $pr.url, base: $pr.baseRefName,
