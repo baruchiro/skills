@@ -44,7 +44,7 @@ def classifyPr($marker):
   def result($state; $next; $hint):
     {repo: $pr.repo, number: $pr.number, title: $pr.title, url: $pr.url, base: $pr.baseRefName,
      phase: $phase, status: ($phase + ":" + $state), next: $next, hint: $hint,
-     ci: $ci, cr: (if $crRunning then "running" else "idle" end), state: ($pr.state // "OPEN"), headRefName: $pr.headRefName, headRefOid: $pr.headRefOid,
+     ci: $ci, cr: (if $crRunning then "running" else "idle" end), state: ($pr.state // "OPEN"), headRefName: $pr.headRefName, headRefOid: $pr.headRefOid, files: $pr.changedFiles,
      threads: ($owners | map(select(. == ({"needs-you": "you", "needs-agent": "agent"}[$state] // null))) | length)};
   if $pr.state == "MERGED" then
     result("merged"; "none"; "merged") | .status = "merged"
