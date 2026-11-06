@@ -13,16 +13,6 @@ Drains unresolved, actionable review threads on one or more PRs, in parallel, wi
 
 **Related, and the boundary between them:** the `code-review-publish` agent (in the `baruchiro` plugin; this skill lives in `pr-review-loop`) posts a completed review's findings *onto* a PR as new inline comments — it is where threads come from, and it deliberately never resolves or replies to one. This skill is the other end: it drains the threads that already exist. Both call `mcp__GitHub__pull_request_review_write`, so keep the methods straight — `create`/`submit_pending` belong to the publisher, `resolve_thread`/`unresolve_thread` belong here.
 
-## Installation and requirements
-
-This skill is included in the `pr-review-loop` Claude Code plugin. Install it from your terminal:
-
-```sh
-claude plugin marketplace add baruchiro/skills && claude plugin install pr-review-loop@skills
-```
-
-The scripts require [GitHub CLI](https://cli.github.com/) authenticated with GitHub (`gh auth status`) and [jq](https://jqlang.github.io/jq/). For the optional live sidebar, install the [PR Review Loop VS Code extension](https://marketplace.visualstudio.com/items?itemName=baruchiro.pr-review-loop) in VS Code 1.90 or newer. The skill handles review threads and writes status files; the extension displays that status and does not perform code reviews.
-
 ## Step 1: Fetch actionable threads (script, not agent judgment)
 
 Run `fetch-actionable-threads.sh OWNER REPO PR_NUMBER` (in this skill's directory) for each PR. It calls `gh api graphql` directly (paginated) and returns only threads that need action *right now* — no LLM filtering, no risk of miscounting on a long thread list. A thread is included by default only if **all** of:
@@ -95,7 +85,7 @@ Step 4's CI check only reflects what's already on the remote. If any Step 3 agen
 
 When the user asks where their PRs stand, and as the last line of every pass, run `pr-status.sh OWNER/REPO#N [OWNER/REPO#N ...]` and render its JSON as a table: PR (linked), title, base, status, whose turn (`next`), `hint`, and review order (`reviewOrder`: a short `[open](url)` link, `stale`, or empty). Keep the rows in the order the script printed them, which is the order you passed. The script also always writes the same table to `pr-status.md` in the project folder (override with `PR_STATUS_FILE`), and the same data as `pr-status.json` beside it (override with `PR_STATUS_JSON_FILE`; each PR also carries `state`, `headRefName`, `headRefOid` `threads`, the open-thread count behind a needs-you or needs-agent status, and `ci`, the CI state whatever the status: `pending`, `failing`, `ok` or `none`, and `cr`, `running` while CodeRabbit reviews whatever the status, else `idle`), PRs in the order given, so the user and anyone on the project can keep it open and walk the PRs in order after the conversation has scrolled on. `project-dir.sh` picks the project folder: the nearest folder below `$HOME` with a `*.code-workspace` file (a multi-repo workspace, so one file covers PRs from every repo in it), else the git repo root, else the current folder. Inside a git repo it adds `pr-status.md`, `pr-status.json` and `pr-review-links.json` to `info/exclude`, so they never get committed. Run the script from the folder of the work, never from the home folder.
 
-The [PR Review Loop VS Code extension](https://marketplace.visualstudio.com/items?itemName=baruchiro.pr-review-loop) shows `pr-status.json` live in a sidebar: the next PR needing you, PRs in review order, and whose turn it is (you, Claude, CI or CodeRabbit). Run this skill for your PRs to generate the file in the project folder, then open that folder or its `.code-workspace` in VS Code. The extension looks beside the `.code-workspace` file first, then in each workspace folder; its sidebar appears once a status file exists. In a trusted workspace, it runs `pr-status.sh` on a timer and watches the file for changes. In an untrusted workspace, it only displays an existing file and does not refresh it. See the [extension README](https://github.com/baruchiro/pr-status-vscode#readme) for file discovery and settings.
+The [PR Review Loop VS Code extension](https://marketplace.visualstudio.com/items?itemName=baruchiro.pr-review-loop) shows `pr-status.json` live in a sidebar.
 
 The **Review order** column comes from `pr-review-links.json` in the same project folder (override with `PR_REVIEW_LINKS_FILE`), which the next section fills. `reviewOrder` is the recorded `/pr-review-sorter` link only while the PR's head is still the commit the link was built against; after a newer push it is `stale`, and it is `null` (empty cell) when no link was ever recorded.
 
