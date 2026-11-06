@@ -16,7 +16,7 @@ Requirements: Claude Code, [GitHub CLI](https://cli.github.com/) authenticated w
 
 ### GitHub MCP server
 
-The skill replies to and resolves review threads and reads CI check runs through the [GitHub MCP server](https://github.com/github/github-mcp-server). The plugin declares it as a dependency in `.mcp.json` (server `GitHub`, `https://api.githubcopilot.com/mcp/`), so it starts when you enable the plugin and authenticates with `GITHUB_PERSONAL_ACCESS_TOKEN`. Its tools appear as `mcp__plugin_pr-review-loop_GitHub__*`. The skill uses `pull_request_read`, `pull_request_review_write` and `add_reply_to_pull_request_comment`. Check that the server is connected in `/mcp`.
+The skill replies to and resolves review threads and reads CI check runs through the GitHub MCP server. `plugin.json` declares the official `github` plugin from `claude-plugins-official` as a dependency, so installing `pr-review-loop` installs it too (the marketplace allows this through `allowCrossMarketplaceDependenciesOn`). That plugin connects to `https://api.githubcopilot.com/mcp/` using `GITHUB_PERSONAL_ACCESS_TOKEN`; its tools appear as `mcp__plugin_github_github__*`. The skill uses `pull_request_read`, `pull_request_review_write` and `add_reply_to_pull_request_comment`. Check that the server is connected in `/mcp`.
 
 If you installed `baruchiro` earlier, run the install command above as well: `baruchiro` no longer contains `resolving-pr-review-comments`.
 

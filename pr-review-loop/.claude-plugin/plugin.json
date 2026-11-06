@@ -5,5 +5,11 @@
   "author": {
     "name": "baruchiro",
     "email": "baruchiro@gmail.com"
-  }
+  },
+  "dependencies": [
+    {
+      "name": "github",
+      "marketplace": "claude-plugins-official"
+    }
+  ]
 }

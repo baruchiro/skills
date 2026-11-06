@@ -5,6 +5,9 @@
     "email": "baruchiro@gmail.com"
   },
   "description": "Baruch Odem's Claude Code plugins: PR review workflow skills and a Home Assistant waiting light.",
+  "allowCrossMarketplaceDependenciesOn": [
+    "claude-plugins-official"
+  ],
   "plugins": [
     {
       "name": "baruchiro",
