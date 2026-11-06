@@ -5,6 +5,9 @@
     "email": "baruchiro@gmail.com"
   },
   "description": "Baruch Odem's Claude Code plugins: PR review workflow skills and a Home Assistant waiting light.",
+  "allowCrossMarketplaceDependenciesOn": [
+    "claude-plugins-official"
+  ],
   "plugins": [
     {
       "name": "baruchiro",
@@ -16,7 +19,7 @@
       "name": "pr-review-loop",
       "source": "./pr-review-loop",
       "description": "Drain review threads on your own PRs and track each PR's status (pr-status.md / pr-status.json)",
-      "version": "0.1.5"
+      "version": "0.1.6"
     },
     {
       "name": "waiting-light",

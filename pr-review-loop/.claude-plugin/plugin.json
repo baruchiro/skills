@@ -1,9 +1,15 @@
 {
   "name": "pr-review-loop",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Drain review threads on your own PRs and track each PR's status (pr-status.md / pr-status.json)",
   "author": {
     "name": "baruchiro",
     "email": "baruchiro@gmail.com"
-  }
+  },
+  "dependencies": [
+    {
+      "name": "github",
+      "marketplace": "claude-plugins-official"
+    }
+  ]
 }
