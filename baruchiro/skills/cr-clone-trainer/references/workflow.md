@@ -179,12 +179,13 @@ areas this person actually *wrote*, not just commented on. Commits rarely carry 
 GitHub login, so derive their git identities once: in each checkout, list
 `git shortlog -sne --all` and keep the names and emails that match their GitHub
 display name, login, or emails (`gh api user/emails --jq '.[].email'`, if the token
-allows it). Reuse that set everywhere below as one `--author=<identity>` per value
-(`$AUTHORS`):
+allows it). Reuse that set everywhere below as a bash array with one `--author` per
+value, so names with spaces stay whole:
 
 ```bash
+AUTHORS=(--author="Jane Doe" --author="jane@example.com")      # from the shortlog
 git -C "$CHECKOUT" shortlog -sne --all | head                  # top authors in this repo
-git -C "$CHECKOUT" log $AUTHORS --oneline | wc -l              # their footprint
+git -C "$CHECKOUT" log "${AUTHORS[@]}" --oneline | wc -l              # their footprint
 ```
 
 That's the ownership half of **WHERE**; `area_counts` is the attention half. You don't
@@ -207,7 +208,7 @@ comment. For each chunk, in order:
    of that comment's `repo`—and check git there:
 
    ```bash
-   git -C "$CHECKOUT" log $AUTHORS --oneline -- <path>               # do they write here?
+   git -C "$CHECKOUT" log "${AUTHORS[@]}" --oneline -- <path>               # do they write here?
    git -C "$CHECKOUT" blame -L <line>,+1 -- <path>                  # this line's owner
    git -C "$CHECKOUT" log --oneline -n 5 -- <path>                  # how often it changes
    ```
