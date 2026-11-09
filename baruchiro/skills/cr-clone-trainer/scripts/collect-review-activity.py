@@ -245,6 +245,7 @@ def load_ai_markers() -> tuple[str, ...]:
         reply_marker,
         "<!-- ai-review-result:",
         "<!-- ai-test-review-result:",
+        "<!-- clone-trace:",
     )
 
 
