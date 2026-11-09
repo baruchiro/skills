@@ -46,7 +46,7 @@ waiting-light/
 
 | Skill | What it does |
 |---|---|
-| `cr-clone-trainer` | Train a private `cr-clone-<name>` reviewer skill that reviews PRs the way you do, learned from your own GitHub review comments. Adapted from [AdirD/agent-shell-hamelech](https://github.com/AdirD/agent-shell-hamelech/tree/main/skills/melech-cr-clone-trainer) (MIT) |
+| `cr-clone-trainer` | Train one private `cr-clone-<name>` reviewer per scope (`oss` / `work`) that reviews PRs the way you do, learned from your own GitHub review comments. Adapted from [AdirD/agent-shell-hamelech](https://github.com/AdirD/agent-shell-hamelech/tree/main/skills/melech-cr-clone-trainer) (MIT) |
 | `pr-readiness-verdict` | Quick pass: fast SAFE/RISKY/BREAKING verdict on a PR or diff, including whether it's even ready to review (stalled vs. active) |
 | `pr-walkthrough` | Deep pass: review a PR (or matching PRs across repos) interactively, chunk by chunk |
 | `test-quality-rubric` | Judge whether an existing unit test earns its keep — Delete, Merge or Rewrite |
