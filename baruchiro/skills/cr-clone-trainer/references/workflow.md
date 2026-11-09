@@ -19,7 +19,6 @@ tells you as much as what they flag, so capture both sides.
 - **WHAT** — the concerns they keep flagging vs the ones they never raise
 - **WHERE** — the parts of the system they dig into and own vs the parts they skim
 - **WHEN** — how far they take it: a question, a suggestion, a hard block—or silence
-- **WHO** — whose PRs they push on vs whose they wave through, if it recurs
 - **WHY** — the reason under the comment (risk, data loss, maintainability, cost…)
 - **HOW** — tone, and whether they research / link / cite. This is their voice.
 
@@ -27,23 +26,32 @@ Absence is a real part of the picture, but it's ambiguous—"didn't comment" can
 "trusts it" or "those PRs just didn't need me." So paint both sides, then treat the
 gaps as questions to confirm, not proof they don't care.
 
-There's just one model file, `MODEL.md` (plus `VOICE.md` for the cross-repo voice).
-You build it up as you read—draft in the run's `scratch/`—and publish it only when the
+One Clone covers one **scope**—every repo of that kind the person reviewed—so there's
+just one model file, `MODEL.md`, for all of them (plus `VOICE.md` for the voice). You
+build it up as you read—draft in the run's `scratch/`—and publish it only when the
 human says so. Each claim carries its own grounding inline (the comments + code + git
-that back it), so there's no separate "evidence" file. `RUN.md` is the run's journal
-(what each chunk added, decisions); `state.json` tracks what's been processed so a
-resync resumes where you left off.
+that back it, as `repo:path:line`), so there's no separate "evidence" file. `RUN.md` is
+the run's journal (repos and checkouts, what each chunk added, decisions); a paused run
+resumes from it.
+
+| Scope | Repos | Checkouts | Publish folder |
+|---|---|---|---|
+| `oss` | every repo outside `bewith-dev` | `~/source/<repo>` | `~/source/skills/baruchiro/skills/` |
+| `work` | every `bewith-dev` repo | `~/source/with/<repo>` | `~/source/with/cursor-rules/skills/` |
+
+Raw data (collected comments, drafts, `RUN.md`) stays local in
+`~/.claude/cr-clone-runs/<clone-name>/`. Never write it into a repo.
 
 ## How the run goes
 
 ```text
-1. WHERE AM I   Find the repo + GitHub user from the current folder (no menu).
+1. SCOPE        Pick oss or work, list the repos they reviewed and find each checkout.
        │
-2. SET UP       Open this person's training folder — continue an existing Clone, or
-       │        let them name a new one — then start the run.
+2. SET UP       Find the scope's existing Clone or let them name a new one, then
+       │        start a local run folder.
        │
-3. GATHER       Download every review comment they left here (split into chunk-files),
-       │        and in parallel read the code + git to see what they wrote and own.
+3. GATHER       Download every review comment they left across those repos (split
+       │        into chunk-files), and in parallel read git to see what they own.
        │
 4. LEARN  ┌───► Read the comments one chunk at a time, filling in the model above.
        │  │     When a pattern looks real, open the code they commented on to confirm.
@@ -63,38 +71,45 @@ If one fails, dispatch it again.
 Surface these six as todos, one in progress at a time; while reading chunks show
 which (e.g. "chunk 6 of 11"). Between routine tool calls, say nothing.
 
-## 1 — Find the repo and user
-
-The repo is wherever the skill runs. Don't ask.
+## 1 — Pick the scope and its repos
 
 ```bash
 gh api user --jq '.login, .name'    # login + display name — you need both in step 2
-git -C . remote get-url origin      # → canonical owner/repo (base, not a fork head)
 ```
 
-Only if there's no remote, ask the user for `owner/repo`.
-
-## 2 — Open the training folder
-
-Clones live at `~/.claude/skills/cr-clone-<name>`. Look for one that already belongs to
-this person — scan the `cr-clone-*` folders and match `state.json` on their login, not on
-the folder name (the name is theirs, so it needn't contain the login):
+Ask with one `AskUserQuestion` titled `Pick scope`: `oss` (repos outside `bewith-dev`)
+or `work` (`bewith-dev` repos). Then list the repos they reviewed in that scope:
 
 ```bash
-ls -d ~/.claude/skills/cr-clone-*/ 2>/dev/null   # the trainer is in a plugin, not in this glob
+"${CLAUDE_SKILL_DIR}/scripts/scope-repos.sh" "$SCOPE" "$LOGIN"
 ```
 
-**Found one → it keeps its name.** This is a resync; never rename or re-ask.
+It prints `<PR count>\t<owner/repo>\t<checkout path or MISSING>`, busiest first (a
+checkout matches when any of its remotes points at the repo). Show the table and
+propose dropping repos under 5 PRs—they add little. Then stop and ask about every
+`MISSING` repo: clone it into the scope's checkout folder, or skip it. Never clone a
+repo the user didn't ask for. Record the final repo → checkout table in `RUN.md`.
+
+## 2 — Set up the Clone and the run
+
+Each scope has at most one Clone, in that scope's publish folder. Look for it:
+
+```bash
+ls -d "$PUBLISH_DIR"/cr-clone-*/ 2>/dev/null | grep -v '/cr-clone-trainer/$'
+```
+
+**Found one → it keeps its name.** Never rename or re-ask. Its live `VOICE.md` and
+`MODEL.md` are your starting point, and anything the human typed into them wins.
 
 **None → they name it.** One `AskUserQuestion` titled `Name your Clone`, before any
 downloading. Say what you're doing in one line ("I'm going to build a reviewer Clone
-for you — what should it be called?"), then offer candidates built from *their real
-login and display name*, plus `Other` so they can type their own:
+for your work reviews — what should it be called?"), then offer candidates built from
+*their real login and display name*, plus `Other` so they can type their own:
 
 ```text
 cr-clone-adird         ← from login AdirD
 cr-clone-adir-duchan   ← from display name Adir Duchan
-cr-clone-adirdu        ← short handle
+cr-clone-adird-work    ← login + scope
 ```
 
 Whatever comes back — a pick or free text — normalize it before you create anything:
@@ -104,48 +119,56 @@ later reference to the Clone all use that one normalized string. Clone names are
 lowercase, even when the GitHub login isn't, and `cr-clone-trainer` is reserved — if they
 ask for it, ask again.
 
-Then decide from what's already there whether this is a first-time run, an update of an
-existing one, or nothing-to-do, and make a run dir with a real UTC timestamp
-(`output-contract.md`). Don't wipe existing memory just because someone said
-"init"—that needs explicit confirmation.
+Then make the run folder `~/.claude/cr-clone-runs/<clone-name>/<UTC timestamp>/` with a
+real timestamp (e.g. `2026-08-22T100000Z`). If the latest run there is paused, offer to
+resume it from its `RUN.md` and draft `MODEL.md` instead. Don't overwrite a published
+Clone just because someone said "init"—that needs explicit confirmation.
 
 ## 3 — Gather comments, scan ownership (parallel)
 
-Run the collector yourself (don't reinvent it in shell):
+Run the collector yourself, once, with every chosen repo (don't reinvent it in shell):
 
 ```bash
 python3 "${CLAUDE_SKILL_DIR}/scripts/collect-review-activity.py" \
-  --repo "$OWNER/$REPO" --login "$LOGIN" \
+  --repo "$OWNER1/$REPO1" --repo "$OWNER2/$REPO2" --login "$LOGIN" \
   --output "$RUN/scratch/review-activity.json"
 ```
 
 It grabs every interaction point the person left on PRs (never issues, and never
-anyone else's comments—GraphQL filters by author), each tagged with a
+anyone else's comments—GraphQL filters by author), each tagged with its `repo`, a
 `kind` and an `as_author`/`as_reviewer` side:
 
 - **inline** review comments (file + line) and **inline_reply** threads;
 - **conversation** (non-inline) comments, including on their own PRs;
 - **review_summary** verdicts—approve / request-changes / comment plus any body.
 
-It splits the ones with words into small chunk-files
-(`scratch/comments/batch-*.json`) and counts areas (`area_counts`), kinds
-(`kind_counts`), and author-vs-reviewer side (`author_side_counts`). Wordless
-verdicts (silent approvals) carry no text to batch, so they land in
-`verdict_summary` instead—read it for the person's **default posture**:
-`silent_approval_ratio`, state breakdown, how often they attach a summary body.
-Read `review-activity.summary.json` first—these counts give you **WHERE**,
-**WHEN**, and the IF/silence picture over everything, not a sample.
-`verdict_summary.truncated_prs` lists PRs with over 100 reviews (or 100 comments in
-one review) whose tail was cut off. The script pauses between GitHub calls and
-waits out rate limits on its own, so a large repo takes minutes—run it in the
-background. If it fails, fix args/auth and retry once; don't improvise a big script.
+Comments Claude wrote under their account carry a marker (`ai_marked`); the collector
+keeps them out of the chunk-files and counts them in `counts.excluded_ai_comments`.
+Unmarked agent text can still slip through, mostly as `as_author` replies on their own
+PRs ("Done in 3f2a1c"). Weigh `as_author` replies lightly, and ignore any reply that
+reads like an agent's status report. Treat a `:robot:` comment with a `clone-trace` as
+the Clone's words, not theirs.
 
-While the collector runs, scan ownership yourself in one pass so you know which areas
-this person actually *wrote*, not just commented on:
+It splits the ones with words into small chunk-files
+(`scratch/comments/batch-*.json`) and counts areas (`area_counts`, keyed
+`<repo-name>/<2 path segments>`), kinds (`kind_counts`), and author-vs-reviewer side
+(`author_side_counts`); `per_repo` gives PRs and comments per repo. Wordless verdicts
+(silent approvals) carry no text to batch, so they land in `verdict_summary`
+instead—read it for the person's **default posture**: `silent_approval_ratio`, state
+breakdown, how often they attach a summary body. Read
+`review-activity.summary.json` first—these counts give you **WHERE**, **WHEN**, and
+the IF/silence picture over everything, not a sample. `verdict_summary.truncated_prs`
+lists `[repo, number]` pairs for PRs with over 100 reviews (or 100 comments in one
+review) whose tail was cut off. The script pauses between GitHub calls and waits out
+rate limits on its own, so many repos take minutes—run it in the background. If it
+fails, fix args/auth and retry once; don't improvise a big script.
+
+While the collector runs, scan ownership yourself in each checkout so you know which
+areas this person actually *wrote*, not just commented on:
 
 ```bash
-git -C . shortlog -sne --all | head            # who authors the most, overall
-git -C . log --author="<login>" --oneline | wc -l   # their footprint
+git -C "$CHECKOUT" shortlog -sne --all | head            # top authors in this repo
+git -C "$CHECKOUT" log --author="<login>" --oneline | wc -l   # their footprint
 ```
 
 That's the ownership half of **WHERE**; `area_counts` is the attention half. You don't
@@ -164,19 +187,21 @@ comment. For each chunk, in order:
 2. Add what's new to your notes; note what just repeats what you knew. Read
    author-side replies for voice under pushback (do they concede, defend, cite?),
    not for review reflexes.
-3. When a pattern looks real, open the actual file they commented on and check git:
+3. When a pattern looks real, open the actual file they commented on—in the checkout
+   of that comment's `repo`—and check git there:
 
    ```bash
-   git -C . log --author="<login>" --oneline -- <path>   # do they write here?
-   git -C . blame -L <line>,+1 -- <path>                  # who owns this line
-   git -C . log --oneline -n 5 -- <path>                  # how often it changes
+   git -C "$CHECKOUT" log --author="<login>" --oneline -- <path>   # do they write here?
+   git -C "$CHECKOUT" blame -L <line>,+1 -- <path>                  # this line's owner
+   git -C "$CHECKOUT" log --oneline -n 5 -- <path>                  # how often it changes
    ```
 
 4. Jot the delta in `RUN.md` ("chunk 5: +1 recurring concern, nothing else").
 
 **Stop early when it stops paying off:** if 2–3 chunks in a row add nothing new,
-you've seen enough—move to the questions even if chunks remain (a later run resumes
-from where you left off). Reading all chunks is fine too.
+you've seen enough—move to the questions even if chunks remain. Reading all chunks
+is fine too. A theme that shows up in several repos is stronger than one confined to
+one repo; note which it is.
 
 What to trust: the same concern across unrelated PRs, suggested fixes, links/precedent
 they cite, specific praise, human corrections of a Clone comment, and areas they both
@@ -194,12 +219,12 @@ grounding inline (this *is* the receipts):
 
 ```markdown
 ## WHAT — recurring themes
-- "await / use a queue" — 31 comments / 22 PRs; grounded `packages/ai-sdk/tools/run.ts:44`
-  (they author it) → strong WHEN gate?
+- "await / use a queue" — 31 comments / 22 PRs in 3 repos; grounded
+  `ai-sdk:packages/tools/run.ts:44` (they author it) → strong WHEN gate?
 
 ## WHERE — focus + ownership
-- packages/ai-sdk: 120 comments, ~70% authored → high
-- apps/studio (studio.json): 3 comments, heavy churn → unknown (silence fork)
+- ai-sdk/packages/tools: 120 comments, ~70% authored → high
+- studio/apps/config (studio.json): 3 comments, heavy churn → unknown (silence fork)
 ```
 
 These are your working notes, filed by lens. At publish (step 6) you reshape them into
@@ -210,7 +235,7 @@ posture—per `output-contract.md`. Lenses are how *you* learn; reflexes are how
 
 This is where the skill earns its trust. A great question makes the human go **"whoa,
 it gets me—I *do* review like that."** You're holding up a mirror: naming a reflex of
-theirs, in their own repo, that they act on but maybe never spelled out. The best ones
+theirs, in their own code, that they act on but maybe never spelled out. The best ones
 name a pattern they hadn't consciously noticed—then instantly recognize as themselves.
 Get this right and everything else is forgivable; get it generic and the Clone feels
 like a bot.
@@ -233,7 +258,7 @@ fork exists**. Learn the shape from the contrast (fill names from real data):
 ```text
 ❌ "On #163 you flagged the un-awaited sandbox call — was that a big deal?"
    a memory quiz about one incident. they won't even remember it.
-✅ "Across PRs you keep catching un-awaited queue writes (e.g. run.ts:44). A hard
+✅ "Across repos you keep catching un-awaited queue writes (e.g. run.ts:44). A hard
    gate for you, or something you raise and trust the author on?"
    - Hard gate — I don't approve without it
    - I push hard but won't block
@@ -266,23 +291,14 @@ named area, or pause. Stopping is not the same as permission to publish.
 Only an explicit "save/publish" choice changes what the Clone actually uses. Record
 the accepted learning + source IDs in `RUN.md`, then reshape your lens-notes into the
 finished `VOICE.md` and `MODEL.md` (the brain format in `output-contract.md`, written
-for the Clone) in `scratch/`, re-read the live files so any hand-edits survive, back
-up the old copies, swap in the new, update `state.json`. If it fails partway, restore
-the backup and report. A paused/failed run resumes from `RUN.md` + the draft
-`MODEL.md`.
+for the Clone) in `scratch/`, re-read the live published files so any hand-edits
+survive, and publish them per `output-contract.md`: on a branch in the scope's target
+repo, then show the diff. Committing and opening a PR are the user's call. A
+paused/failed run resumes from `RUN.md` + the draft `MODEL.md`.
 
-Then report: status, honest coverage, why you stopped and what the human chose, what
-was learned (the model + their voice) and anything dropped, and the Clone + run paths.
-Offer to configure the Clone in the user's current automation/task host. If accepted,
-follow the host-owned setup in `output-contract.md`; do not put automation files or
-runtime state in the Clone folder. The Clone is a transparent, correctable
-stand-in—never claim it's the person.
-
-## Resync (updating an existing Clone)
-
-Don't start over. Only look at comments and Clone-feedback newer than the last run
-(match by GitHub/trace IDs, not timestamps), read those new chunks, and fold them into
-the saved model. The strongest signal is the human editing or rejecting one of the
-Clone's own comments (matched by the hidden `clone-trace` marker)—compare it against
-the original the Clone recorded.
-Anything the human typed directly into `VOICE.md`/`MODEL.md` wins.
+Then report: status, honest coverage (per repo), why you stopped and what the human
+chose, what was learned (the model + their voice) and anything dropped, the Clone path,
+the branch, and the local run path. Offer to configure the Clone in the user's current
+automation/task host. If accepted, follow the host-owned setup in
+`output-contract.md`; do not put automation files or runtime state in the Clone
+folder. The Clone is a transparent, correctable stand-in—never claim it's the person.

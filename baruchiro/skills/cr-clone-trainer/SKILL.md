@@ -1,12 +1,12 @@
 ---
 name: cr-clone-trainer
-description: Build or resync a private reviewer that learns your GitHub code-review style.
+description: Build a reviewer Clone that learns your GitHub code-review style across all the repos of one scope (oss or work).
 disable-model-invocation: true
 ---
 
 # Reviewer Clone trainer
 
-Build a private reviewer that reviews PRs like this specific person—not a generic
+Build a reviewer that reviews PRs like this specific person—not a generic
 checklist bot. Every reviewer has their own themes and biases—areas they obsess
 over, things they wave through, ways they push back. We don't fix that or impose
 "best practices." We mimic it.
@@ -30,13 +30,18 @@ Learn a compact model of the person:
 - **WHAT** they flag—the concerns they keep raising.
 - **WHERE** they focus—the parts of the system they author, own, or care about.
 - **WHEN** they escalate—a question, a suggestion, or a hard block.
-- **WHO** they push on—authors they treat differently, if it recurs.
 - **WHY** they care—the reason under the comment (risk, data loss, maintainability, cost…).
 - **HOW** they say it—tone and whether they research/cite. This is their voice.
 
+One Clone per **scope**, trained across every repo of that scope the person reviewed:
+`oss` (repos outside `bewith-dev`, checkouts in `~/source/<repo>`, published to
+`~/source/skills/baruchiro/skills/`) or `work` (`bewith-dev` repos, checkouts in
+`~/source/with/<repo>`, published to `~/source/with/cursor-rules/skills/`). Raw
+training data stays local in `~/.claude/cr-clone-runs/<clone-name>/`.
+
 ## The approach: correlate, don't narrate
 
-The repo is already checked out where the skill runs. So instead of deep-reading
+The repos are checked out locally. So instead of deep-reading
 whole PRs and their discussions (which overfits and makes the Clone way too
 opinionated), work from breadth grounded in reality:
 
@@ -47,8 +52,8 @@ opinionated), work from breadth grounded in reality:
   or comment, *including the silent approvals with no words at all*.
 - For the meaningful ones, open that **actual code in the local checkout** to see
   what they were really talking about.
-- Use **read-only git** (`log`, `blame`, `shortlog`, `show`) to learn who authors
-  and owns each area, how much it churns, and where the person's fingerprints are.
+- Use **read-only git** (`log`, `blame`, `shortlog`, `show`) in that checkout to learn
+  which areas they author and own, how much it churns, and where the person's fingerprints are.
 
 Silence and verdicts are first-class signal. "Approves 85% of PRs with no
 comment" is as much a part of their persona as any nitpick—it's their default
@@ -61,5 +66,5 @@ than any deep dive. Never run destructive git.
 
 ## References
 
-- `references/workflow.md` — the full training flow (read after picking the repo)
+- `references/workflow.md` — the full training flow (read first)
 - `references/output-contract.md` — the files you generate and how to publish

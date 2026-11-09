@@ -59,7 +59,7 @@ When pull requests are related, explicitly record the relationship and review
 them as a sequence—for example, a service-foundation pull request followed by a
 catalog-migration pull request. Memory is context, not authority: current
 GitHub state and current code always win. Do not edit the reviewer Clone's
-`MODEL.md`, `VOICE.md`, or root training `state.json`. If the ledger grows
+`MODEL.md` or `VOICE.md`. If the ledger grows
 large, condense merged or closed entries, but preserve rationale and
 relationship context for open pull requests.
 
