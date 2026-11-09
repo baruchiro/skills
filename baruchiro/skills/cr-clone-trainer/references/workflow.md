@@ -101,7 +101,11 @@ ls -d "$PUBLISH_DIR"/cr-clone-*/ 2>/dev/null | grep -v '/cr-clone-trainer/$'
 **Found one → it keeps its name.** Never rename or re-ask. Its live `VOICE.md` and
 `MODEL.md` are your starting point, and anything the human typed into them wins.
 
-**None → they name it.** One `AskUserQuestion` titled `Name your Clone`, before any
+**None → check for a paused, unpublished run** in `ls -d ~/.claude/cr-clone-runs/*/`
+(any Clone name not in the publish folder). If its `RUN.md` is for this scope, offer
+to resume it; that keeps its name.
+
+**Still none → they name it.** One `AskUserQuestion` titled `Name your Clone`, before any
 downloading. Say what you're doing in one line ("I'm going to build a reviewer Clone
 for your work reviews — what should it be called?"), then offer candidates built from
 *their real login and display name*, plus `Other` so they can type their own:

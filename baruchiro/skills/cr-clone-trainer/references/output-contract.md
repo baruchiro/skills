@@ -127,8 +127,10 @@ Only an explicit publish decision changes the Clone. Stage complete files in
 privacy/consistency (no raw comments, no other person named or characterized), then:
 
 1. In the scope's target repo (`~/source/skills` for `oss`,
-   `~/source/with/cursor-rules` for `work`), check the working tree is clean and
-   create a branch (`git -C <repo> switch -c cr-clone-<name>-<UTC date>`).
+   `~/source/with/cursor-rules` for `work`), check the working tree is clean—if it
+   isn't, stop and ask the user. Then branch from the default branch, not the
+   current HEAD: `git -C <repo> fetch origin`, then
+   `git -C <repo> switch -c cr-clone-<name>-<UTC date> origin/<default branch>`.
 2. Write `SKILL.md`, `VOICE.md`, `MODEL.md` into `<publish folder>/cr-clone-<name>/`.
 3. Show `git -C <repo> diff` (and `git status` for new files).
 
