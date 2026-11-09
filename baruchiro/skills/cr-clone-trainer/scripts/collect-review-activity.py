@@ -190,12 +190,12 @@ def value_range(values: list[str]) -> dict[str, str] | None:
     return {"earliest": min(values), "latest": max(values)} if values else None
 
 
-def area_of(path: str | None) -> str:
-    """Group a comment's file path into a coarse system area."""
-    if not path:
+def area_of(repo: str, path: str | None) -> str:
+    """Group a comment's file path into a coarse system area within its repo."""
+    parts = [part for part in (path or "").split("/") if part]
+    if not parts:
         return "(no path)"
-    parts = [part for part in path.split("/") if part]
-    return "/".join(parts[:2]) if len(parts) >= 2 else (parts[0] if parts else "(no path)")
+    return "/".join([repo.split("/", 1)[1], *parts[:2]])
 
 
 def write_comment_batches(
@@ -218,9 +218,11 @@ def write_comment_batches(
                 "index": index,
                 "file": str(path),
                 "count": len(chunk),
-                "pr_numbers": sorted({comment["pr_number"] for comment in chunk}),
+                "prs": sorted(
+                    {(comment["repo"], comment["pr_number"]) for comment in chunk}
+                ),
                 "areas": counter_rows(
-                    [area_of(comment["path"]) for comment in chunk], "area"
+                    [area_of(comment["repo"], comment["path"]) for comment in chunk], "area"
                 ),
                 "created_range": value_range(
                     [comment["created_at"] for comment in chunk if comment.get("created_at")]
@@ -228,6 +230,22 @@ def write_comment_batches(
             }
         )
     return batches
+
+
+def load_ai_markers() -> tuple[str, ...]:
+    shared = Path(__file__).resolve().parents[3] / "shared" / "agent-reply-marker.txt"
+    return (
+        shared.read_text(encoding="utf-8").strip(),
+        "<!-- ai-review-result:",
+        "<!-- ai-test-review-result:",
+    )
+
+
+AI_MARKERS = load_ai_markers()
+
+
+def is_ai_comment(body: str) -> bool:
+    return any(marker in body for marker in AI_MARKERS)
 
 
 def is_self(login: str | None, target: str) -> bool:
@@ -310,19 +328,14 @@ def fetch_my_reviews(
     return found, truncated
 
 
-def fetch_my_pr_conversation_comments(repo: str, login: str) -> list[dict[str, Any]]:
-    """The login's own non-inline comments on pull requests (never issues) in repo."""
+def fetch_my_pr_conversation_comments(login: str) -> list[dict[str, Any]]:
+    """The login's own non-inline comments on pull requests (never issues), all repos."""
     comments: list[dict[str, Any]] = []
     cursor: str | None = None
     while True:
         variables = {"login": login, **({"cursor": cursor} if cursor else {})}
         page = graphql(MY_ISSUE_COMMENTS_QUERY, **variables)["user"]["issueComments"]
-        comments.extend(
-            comment
-            for comment in page["nodes"]
-            if comment["pullRequest"]
-            and comment["repository"]["nameWithOwner"].casefold() == repo.casefold()
-        )
+        comments.extend(comment for comment in page["nodes"] if comment["pullRequest"])
         if not page["pageInfo"]["hasNextPage"]:
             return comments
         cursor = page["pageInfo"]["endCursor"]
@@ -351,6 +364,7 @@ def interaction(
     body = body or ""
     return {
         "id": item_id,
+        "repo": repo,
         "html_url": url,
         "pr_number": number,
         "pr_url": pr.get("url", f"https://github.com/{repo}/pull/{number}"),
@@ -371,7 +385,7 @@ def interaction(
         "body": body,
         "body_chars": len(body),
         "links": LINK_RE.findall(body),
-        "clone_marked": "<!-- clone-trace:" in body,
+        "ai_marked": is_ai_comment(body),
     }
 
 
@@ -392,14 +406,15 @@ def build_summary(result: dict[str, Any], detail_output: Path) -> dict[str, Any]
         compact = {
             key: value
             for key, value in candidate.items()
-            if key not in {"body", "clone_marked"}
+            if key not in {"body", "ai_marked"}
         }
         compact["body_preview"] = body[:500] + ("…" if len(body) > 500 else "")
         candidates.append(compact)
     return {
         "schema_version": result["schema_version"],
         "generated_at": result["generated_at"],
-        "repository": result["repository"],
+        "repositories": result["repositories"],
+        "per_repo": result["per_repo"],
         "requested_reviewer": result["requested_reviewer"],
         "authenticated_login": result["authenticated_login"],
         "coverage_complete": result["coverage_complete"],
@@ -425,21 +440,15 @@ def build_summary(result: dict[str, Any], detail_output: Path) -> dict[str, Any]
     }
 
 
-def collect(args: argparse.Namespace) -> dict[str, Any]:
-    authenticated_login = run_gh(["api", "user", "--jq", ".login"]).strip()
-    repo_info = gh_json(["api", f"repos/{args.repo}"])
+def collect_repo(repo: str, login: str, today: dt.date) -> dict[str, Any]:
+    repo_info = gh_json(["api", f"repos/{repo}"])
     repo_created = dt.date.fromisoformat(repo_info["created_at"][:10])
-    today = dt.datetime.now(dt.timezone.utc).date()
 
     indexed: dict[str, list[dict[str, Any]]] = {}
     query_ranges: dict[str, list[dict[str, Any]]] = {}
     for role in ROLE_FLAGS:
         indexed[role], query_ranges[role] = partitioned_search(
-            args.repo,
-            args.login,
-            role,
-            repo_created,
-            today,
+            repo, login, role, repo_created, today
         )
 
     pr_by_number: dict[int, dict[str, Any]] = {}
@@ -450,6 +459,7 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
             entry = pr_by_number.setdefault(
                 number,
                 {
+                    "repo": repo,
                     "number": number,
                     "title": source["title"],
                     "author": author.get("login") if isinstance(author, dict) else None,
@@ -467,10 +477,10 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
         key=lambda entry: entry["number"],
     )
     normalized_prs = {entry["number"]: entry for entry in prs}
-
-    pr_numbers = sorted(normalized_prs, reverse=True)
-    my_reviews, truncated_prs = fetch_my_reviews(args.repo, args.login, pr_numbers)
-    context = {"repo": args.repo, "prs": normalized_prs, "login": args.login}
+    my_reviews, truncated_prs = fetch_my_reviews(
+        repo, login, sorted(normalized_prs, reverse=True)
+    )
+    context = {"repo": repo, "prs": normalized_prs, "login": login}
 
     reviews = [
         interaction(
@@ -506,6 +516,24 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
         for number, review in my_reviews
         for comment in review["comments"]["nodes"]
     ]
+    return {
+        "repo": repo,
+        "indexed": indexed,
+        "query_ranges": query_ranges,
+        "prs": prs,
+        "context": context,
+        "truncated_prs": [(repo, number) for number in truncated_prs],
+        "reviews": reviews,
+        "comments": comments,
+    }
+
+
+def collect(args: argparse.Namespace) -> dict[str, Any]:
+    authenticated_login = run_gh(["api", "user", "--jq", ".login"]).strip()
+    today = dt.datetime.now(dt.timezone.utc).date()
+    repo_results = [collect_repo(repo, args.login, today) for repo in args.repo]
+    by_repo = {result["repo"].casefold(): result for result in repo_results}
+
     conversation_comments = [
         interaction(
             item_id=comment["databaseId"],
@@ -515,10 +543,29 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
             body=comment["body"],
             created_at=comment["createdAt"],
             updated_at=comment["updatedAt"],
-            **context,
+            **by_repo[comment["repository"]["nameWithOwner"].casefold()]["context"],
         )
-        for comment in fetch_my_pr_conversation_comments(args.repo, args.login)
+        for comment in fetch_my_pr_conversation_comments(args.login)
+        if comment["repository"]["nameWithOwner"].casefold() in by_repo
     ]
+
+    prs = [pr for result in repo_results for pr in result["prs"]]
+    reviews = [item for result in repo_results for item in result["reviews"]]
+    comments = [item for result in repo_results for item in result["comments"]]
+    truncated_prs = [item for result in repo_results for item in result["truncated_prs"]]
+    indexed = {
+        role: [pr for result in repo_results for pr in result["indexed"][role]]
+        for role in ROLE_FLAGS
+    }
+    query_ranges = {
+        role: [
+            {"repo": result["repo"], **interval}
+            for result in repo_results
+            for interval in result["query_ranges"][role]
+        ]
+        for role in ROLE_FLAGS
+    }
+    pr_count = len(prs)
 
     approvals = sum(1 for r in reviews if r["review_state"] == "APPROVED")
     silent_approvals = sum(
@@ -527,7 +574,7 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
         if r["review_state"] == "APPROVED" and not r["body"].strip()
     )
     verdict_summary = {
-        "prs_scanned": len(pr_numbers),
+        "prs_scanned": pr_count,
         "truncated_prs": truncated_prs,
         "reviews_collected": len(reviews),
         "states": counter_rows([r["review_state"] for r in reviews], "state"),
@@ -539,17 +586,18 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
         "reviews_with_body": sum(1 for r in reviews if r["body"].strip()),
     }
 
-    strongest_by_pr: dict[int, dict[str, Any]] = {}
+    strongest_by_pr: dict[tuple[str, int], dict[str, Any]] = {}
     for comment in comments:
         if (
             not comment["path"]
             or not comment["body"].strip()
-            or comment["clone_marked"]
+            or comment["ai_marked"]
         ):
             continue
-        current = strongest_by_pr.get(comment["pr_number"])
+        key = (comment["repo"], comment["pr_number"])
+        current = strongest_by_pr.get(key)
         if current is None or comment["body_chars"] > current["body_chars"]:
-            strongest_by_pr[comment["pr_number"]] = comment
+            strongest_by_pr[key] = comment
     candidates = sorted(
         strongest_by_pr.values(),
         key=lambda comment: (-comment["body_chars"], comment["id"]),
@@ -562,14 +610,16 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
     human_comments = [
         comment
         for comment in (comments + conversation_comments + reviews)
-        if not comment["clone_marked"] and comment["body"].strip()
+        if not comment["ai_marked"] and comment["body"].strip()
     ]
     comments_dir = args.comments_dir or args.output.parent / "comments"
     comment_batches = write_comment_batches(
         human_comments, comments_dir, args.batch_size
     )
     area_counts = counter_rows(
-        [area_of(comment["path"]) for comment in human_comments if comment["path"]],
+        [area_of(comment["repo"], comment["path"])
+            for comment in human_comments
+            if comment["path"]],
         "area",
     )
     kind_counts = counter_rows(
@@ -591,7 +641,7 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
     return {
         "schema_version": 1,
         "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
-        "repository": args.repo,
+        "repositories": args.repo,
         "requested_reviewer": args.login,
         "authenticated_login": authenticated_login,
         "coverage_complete": coverage_complete,
@@ -600,7 +650,7 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
             "reviewed": len(indexed["reviewed"]),
             "commented": len(indexed["commented"]),
             "authored": len(indexed["authored"]),
-            "unique_prs": len(prs),
+            "unique_prs": pr_count,
             "inline_review_comments": len(comments),
             "conversation_comments": len(conversation_comments),
             "reviews_collected": len(reviews),
@@ -610,10 +660,10 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
                 if comment["as_author"] and comment["body"].strip()
             ),
             "prs_with_inline_review_comments": len(
-                {comment["pr_number"] for comment in comments}
+                {(comment["repo"], comment["pr_number"]) for comment in comments}
             ),
-            "clone_marked_comments": sum(
-                comment["clone_marked"]
+            "excluded_ai_comments": sum(
+                comment["ai_marked"]
                 for comment in (comments + conversation_comments + reviews)
             ),
             "comments_with_links": sum(bool(comment["links"]) for comment in comments),
@@ -625,6 +675,16 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
         "role_combinations": counter_rows(
             ["+".join(entry["roles"]) for entry in prs], "roles"
         ),
+        "per_repo": [
+            {
+                "repo": repo,
+                "unique_prs": len(result["prs"]),
+                "human_comments": sum(
+                    comment["repo"] == repo for comment in human_comments
+                ),
+            }
+            for repo, result in zip(args.repo, repo_results)
+        ],
         "prs": prs,
         "inline_review_comments": comments,
         "conversation_comments": conversation_comments,
@@ -642,7 +702,7 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
         },
         "candidate_selection": {
             "method": (
-                "Longest non-Clone, non-empty, path-anchored inline comment per PR; "
+                "Longest non-Claude, non-empty, path-anchored inline comment per PR; "
                 "a starting sample the main agent correlates to local code and git."
             ),
             "limit": args.candidate_limit,
@@ -668,7 +728,12 @@ def parse_args() -> argparse.Namespace:
             "Handles GitHub Search's 1,000-result cap automatically."
         )
     )
-    parser.add_argument("--repo", required=True, help="Canonical owner/repository")
+    parser.add_argument(
+        "--repo",
+        action="append",
+        required=True,
+        help="Canonical owner/repository; repeat for several repositories",
+    )
     parser.add_argument("--login", required=True, help="GitHub reviewer login")
     parser.add_argument(
         "--output",
