@@ -102,7 +102,7 @@ ls -d "$PUBLISH_DIR"/cr-clone-*/ 2>/dev/null | grep -v '/cr-clone-trainer/$'
 `MODEL.md` are your starting point, and anything the human typed into them wins.
 
 **None → check for a paused, unpublished run** in `ls -d ~/.claude/cr-clone-runs/*/`
-(any Clone name not in the publish folder). If its `RUN.md` is for this scope, offer
+(any Clone name not in the publish folder). If its `RUN.md` has `scope:` equal to this scope, offer
 to resume it; that keeps its name.
 
 **Still none → they name it.** One `AskUserQuestion` titled `Name your Clone`, before any
@@ -124,7 +124,8 @@ lowercase, even when the GitHub login isn't, and `cr-clone-trainer` is reserved 
 ask for it, ask again.
 
 Then make the run folder `~/.claude/cr-clone-runs/<clone-name>/<UTC timestamp>/` with a
-real timestamp (e.g. `2026-08-22T100000Z`). If the latest run there is paused, offer to
+real timestamp (e.g. `2026-08-22T100000Z`), and start its `RUN.md` with
+`scope: <oss|work>`. If the latest run there is paused, offer to
 resume it from its `RUN.md` and draft `MODEL.md` instead. Don't overwrite a published
 Clone just because someone said "init"—that needs explicit confirmation.
 

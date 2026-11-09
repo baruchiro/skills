@@ -18,7 +18,7 @@ The run stays local, never in a repo:
 
 ```text
 ~/.claude/cr-clone-runs/<name>/2026-08-22T100000Z/
-  RUN.md              # repos + checkouts, coverage, per-chunk deltas, human answers, decision, source IDs
+  RUN.md              # scope: oss|work, repos + checkouts, coverage, per-chunk deltas, human answers, decision, source IDs
   scratch/            # collector JSON + comments/batch-*.json + draft MODEL.md/VOICE.md
 ```
 
@@ -129,8 +129,9 @@ privacy/consistency (no raw comments, no other person named or characterized), t
 1. In the scope's target repo (`~/source/skills` for `oss`,
    `~/source/with/cursor-rules` for `work`), check the working tree is clean—if it
    isn't, stop and ask the user. Then branch from the default branch, not the
-   current HEAD: `git -C <repo> fetch origin`, then
-   `git -C <repo> switch -c cr-clone-<name>-<UTC date> origin/<default branch>`.
+   current HEAD: `git -C <repo> fetch origin`, resolve it with
+   `git -C <repo> symbolic-ref --short refs/remotes/origin/HEAD` (prints
+   `origin/<default>`), then `git -C <repo> switch -c cr-clone-<name>-<UTC date> <that ref>`.
 2. Write `SKILL.md`, `VOICE.md`, `MODEL.md` into `<publish folder>/cr-clone-<name>/`.
 3. Show `git -C <repo> diff` (and `git status` for new files).
 
