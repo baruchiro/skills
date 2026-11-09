@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import collections
 import datetime as dt
+import functools
 import json
 import re
 import subprocess
@@ -232,20 +233,23 @@ def write_comment_batches(
     return batches
 
 
+@functools.cache
 def load_ai_markers() -> tuple[str, ...]:
-    shared = Path(__file__).resolve().parents[3] / "shared" / "agent-reply-marker.txt"
+    marker_file = (
+        Path(__file__).resolve().parents[3] / "shared" / "agent-reply-marker.txt"
+    )
+    reply_marker = marker_file.read_text(encoding="utf-8").strip()
+    if not reply_marker:
+        raise CollectionError(f"{marker_file} is empty; refusing to flag every comment.")
     return (
-        shared.read_text(encoding="utf-8").strip(),
+        reply_marker,
         "<!-- ai-review-result:",
         "<!-- ai-test-review-result:",
     )
 
 
-AI_MARKERS = load_ai_markers()
-
-
 def is_ai_comment(body: str) -> bool:
-    return any(marker in body for marker in AI_MARKERS)
+    return any(marker in body for marker in load_ai_markers())
 
 
 def is_self(login: str | None, target: str) -> bool:
