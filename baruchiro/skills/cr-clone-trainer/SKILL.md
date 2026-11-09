@@ -64,6 +64,18 @@ how they push *as the reviewer*; the collector labels each point `as_author` vs
 That combination—their words, the real code, and git ownership—makes a truer clone
 than any deep dive. Never run destructive git.
 
+## Scripts
+
+Helper scripts live in `${CLAUDE_SKILL_DIR}/scripts/` (`scope-repos.sh`,
+`collect-review-activity.py`). The references call this "the scripts directory".
+
+## Variables
+
+- `$LOGIN`, display name: `gh api user --jq '.login, .name'` (workflow step 1).
+- `$SCOPE`: `oss` or `work`, the user's pick in step 1.
+- `$PUBLISH_DIR`: the scope's publish folder from the scope table in `workflow.md`.
+- `$CHECKOUT`: the local checkout of a repo, from the `scope-repos.sh` output.
+
 ## References
 
 - `references/workflow.md` — the full training flow (read first)

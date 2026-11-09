@@ -77,11 +77,15 @@ which (e.g. "chunk 6 of 11"). Between routine tool calls, say nothing.
 gh api user --jq '.login, .name'    # login + display name — you need both in step 2
 ```
 
+`$LOGIN` is that login; `$SCOPE` is the pick below; `$PUBLISH_DIR` is the scope's
+publish folder from the table above; `$CHECKOUT` is a repo's checkout from the
+`scope-repos.sh` output. `<scripts directory>` is the one named in `SKILL.md`.
+
 Ask with one `AskUserQuestion` titled `Pick scope`: `oss` (repos outside `bewith-dev`)
 or `work` (`bewith-dev` repos). Then list the repos they reviewed in that scope:
 
 ```bash
-"${CLAUDE_SKILL_DIR}/scripts/scope-repos.sh" "$SCOPE" "$LOGIN"
+"<scripts directory>/scope-repos.sh" "$SCOPE" "$LOGIN"
 ```
 
 It prints `<PR count>\t<owner/repo>\t<checkout path or MISSING>`, busiest first (a
@@ -100,6 +104,8 @@ ls -d "$PUBLISH_DIR"/cr-clone-*/ 2>/dev/null | grep -v '/cr-clone-trainer/$'
 
 **Found one → it keeps its name.** Never rename or re-ask. Its live `VOICE.md` and
 `MODEL.md` are your starting point, and anything the human typed into them wins.
+Retraining recomputes every count from the fresh collection; never add them to the old
+model's counts. Carry over only the human's edits.
 
 **None → check for a paused, unpublished run** in `ls -d ~/.claude/cr-clone-runs/*/`
 (any Clone name not in the publish folder). If its `RUN.md` has `scope:` equal to this scope, offer
@@ -107,7 +113,7 @@ to resume it; that keeps its name.
 
 **Still none → they name it.** One `AskUserQuestion` titled `Name your Clone`, before any
 downloading. Say what you're doing in one line ("I'm going to build a reviewer Clone
-for your work reviews — what should it be called?"), then offer candidates built from
+for your <scope> reviews — what should it be called?"), then offer candidates built from
 *their real login and display name*, plus `Other` so they can type their own:
 
 ```text
@@ -134,7 +140,7 @@ Clone just because someone said "init"—that needs explicit confirmation.
 Run the collector yourself, once, with every chosen repo (don't reinvent it in shell):
 
 ```bash
-python3 "${CLAUDE_SKILL_DIR}/scripts/collect-review-activity.py" \
+python3 "<scripts directory>/collect-review-activity.py" \
   --repo "$OWNER1/$REPO1" --repo "$OWNER2/$REPO2" --login "$LOGIN" \
   --output "$RUN/scratch/review-activity.json"
 ```
@@ -169,11 +175,16 @@ rate limits on its own, so many repos take minutes—run it in the background. I
 fails, fix args/auth and retry once; don't improvise a big script.
 
 While the collector runs, scan ownership yourself in each checkout so you know which
-areas this person actually *wrote*, not just commented on:
+areas this person actually *wrote*, not just commented on. Commits rarely carry the
+GitHub login, so derive their git identities once: in each checkout, list
+`git shortlog -sne --all` and keep the names and emails that match their GitHub
+display name, login, or emails (`gh api user/emails --jq '.[].email'`, if the token
+allows it). Reuse that set everywhere below as one `--author=<identity>` per value
+(`$AUTHORS`):
 
 ```bash
-git -C "$CHECKOUT" shortlog -sne --all | head            # top authors in this repo
-git -C "$CHECKOUT" log --author="<login>" --oneline | wc -l   # their footprint
+git -C "$CHECKOUT" shortlog -sne --all | head                  # top authors in this repo
+git -C "$CHECKOUT" log $AUTHORS --oneline | wc -l              # their footprint
 ```
 
 That's the ownership half of **WHERE**; `area_counts` is the attention half. You don't
@@ -196,7 +207,7 @@ comment. For each chunk, in order:
    of that comment's `repo`—and check git there:
 
    ```bash
-   git -C "$CHECKOUT" log --author="<login>" --oneline -- <path>   # do they write here?
+   git -C "$CHECKOUT" log $AUTHORS --oneline -- <path>               # do they write here?
    git -C "$CHECKOUT" blame -L <line>,+1 -- <path>                  # this line's owner
    git -C "$CHECKOUT" log --oneline -n 5 -- <path>                  # how often it changes
    ```

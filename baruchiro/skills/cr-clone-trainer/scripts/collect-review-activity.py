@@ -238,7 +238,10 @@ def load_ai_markers() -> tuple[str, ...]:
     marker_file = (
         Path(__file__).resolve().parents[3] / "shared" / "agent-reply-marker.txt"
     )
-    reply_marker = marker_file.read_text(encoding="utf-8").strip()
+    try:
+        reply_marker = marker_file.read_text(encoding="utf-8").strip()
+    except FileNotFoundError as exc:
+        raise CollectionError(f"{marker_file} is missing.") from exc
     if not reply_marker:
         raise CollectionError(f"{marker_file} is empty; refusing to flag every comment.")
     return (
@@ -572,23 +575,24 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
     }
     pr_count = len(prs)
 
-    approvals = sum(1 for r in reviews if r["review_state"] == "APPROVED")
+    human_reviews = [r for r in reviews if not r["ai_marked"]]
+    approvals = sum(1 for r in human_reviews if r["review_state"] == "APPROVED")
     silent_approvals = sum(
         1
-        for r in reviews
+        for r in human_reviews
         if r["review_state"] == "APPROVED" and not r["body"].strip()
     )
     verdict_summary = {
         "prs_scanned": pr_count,
         "truncated_prs": truncated_prs,
         "reviews_collected": len(reviews),
-        "states": counter_rows([r["review_state"] for r in reviews], "state"),
+        "states": counter_rows([r["review_state"] for r in human_reviews], "state"),
         "approvals": approvals,
         "silent_approvals": silent_approvals,
         "silent_approval_ratio": (
             round(silent_approvals / approvals, 3) if approvals else None
         ),
-        "reviews_with_body": sum(1 for r in reviews if r["body"].strip()),
+        "reviews_with_body": sum(1 for r in human_reviews if r["body"].strip()),
     }
 
     strongest_by_pr: dict[tuple[str, int], dict[str, Any]] = {}
@@ -608,10 +612,6 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
         key=lambda comment: (-comment["body_chars"], comment["id"]),
     )[: args.candidate_limit]
 
-    # Everything with words the person actually wrote feeds the learn loop:
-    # inline review comments, their replies on their own PRs, conversation
-    # comments, and review summary bodies. Silent reviews carry no text, so they
-    # shape verdict_summary only.
     human_comments = [
         comment
         for comment in (comments + conversation_comments + reviews)
@@ -662,7 +662,9 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
             "replies_on_own_prs": sum(
                 1
                 for comment in (comments + conversation_comments)
-                if comment["as_author"] and comment["body"].strip()
+                if comment["as_author"]
+                and comment["body"].strip()
+                and not comment["ai_marked"]
             ),
             "prs_with_inline_review_comments": len(
                 {(comment["repo"], comment["pr_number"]) for comment in comments}
@@ -671,7 +673,10 @@ def collect(args: argparse.Namespace) -> dict[str, Any]:
                 comment["ai_marked"]
                 for comment in (comments + conversation_comments + reviews)
             ),
-            "comments_with_links": sum(bool(comment["links"]) for comment in comments),
+            "comments_with_links": sum(
+                bool(comment["links"]) and not comment["ai_marked"]
+                for comment in comments
+            ),
         },
         "created_range": value_range([entry["createdAt"] for entry in prs]),
         "updated_range": value_range([entry["updatedAt"] for entry in prs]),

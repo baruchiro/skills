@@ -131,9 +131,15 @@ privacy/consistency (no raw comments, no other person named or characterized), t
    isn't, stop and ask the user. Then branch from the default branch, not the
    current HEAD: `git -C <repo> fetch origin`, resolve it with
    `git -C <repo> symbolic-ref --short refs/remotes/origin/HEAD` (prints
-   `origin/<default>`), then `git -C <repo> switch -c cr-clone-<name>-<UTC date> <that ref>`.
+   `origin/<default>`; if it fails, run `git -C <repo> remote set-head origin -a` and
+   retry), then `git -C <repo> switch -c cr-clone-<name>-<UTC date> <that ref>`.
 2. Write `SKILL.md`, `VOICE.md`, `MODEL.md` into `<publish folder>/cr-clone-<name>/`.
-3. Show `git -C <repo> diff` (and `git status` for new files).
+3. Bump the target plugin's version (patch, or minor for a first publish) in both
+   places: for `oss`, `baruchiro/.claude-plugin/plugin.json` and the `baruchiro` entry
+   in the root `.claude-plugin/marketplace.json`; for `work`,
+   `cursor-rules/.claude-plugin/plugin.json` and the `bewith` entry in
+   `cursor-rules/.claude-plugin/marketplace.json`.
+4. Show `git -C <repo> diff` (and `git status` for new files).
 
 Committing, pushing, and opening a PR are the user's call. Git is the backup—no
 transaction protocol.
@@ -142,7 +148,9 @@ transaction protocol.
 
 Write it on the first publish. Its frontmatter is valid Claude Code skill
 frontmatter: `name:` is the lowercase `cr-clone-<name>`, matching the folder exactly,
-and `description:` says it reviews a PR in the person's style. It tells the Clone to:
+and `description:` says it reviews a PR in the person's style. It also sets
+`disable-model-invocation: true`, so the Clone runs only when invoked by name and never
+auto-triggers for teammates. It tells the Clone to:
 
 1. Load the `MODEL.md` and `VOICE.md` next to this `SKILL.md`—the same files for any
    PR, whatever its repo.
