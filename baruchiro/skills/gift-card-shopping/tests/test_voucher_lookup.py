@@ -17,9 +17,29 @@ import sys
 SCRIPTS_DIR = Path(__file__).parent.parent / 'scripts'
 EXAMPLES_DIR = Path(__file__).parent.parent / 'examples'
 
-def run_lookup(args: list[str], cwd: Path | None = None) -> tuple[int, str, str]:
-    """Run voucher_lookup.py and return (exit_code, stdout, stderr)."""
-    cmd = [sys.executable, str(SCRIPTS_DIR / 'voucher_lookup.py')] + args
+FIXED_NOW = '2026-10-20T12:00:00+00:00'
+
+CLOCK_SHIM = """
+import datetime, runpy, sys
+fixed = datetime.datetime.fromisoformat(sys.argv.pop(1))
+class _Datetime(datetime.datetime):
+    @classmethod
+    def now(cls, tz=None):
+        return fixed.astimezone(tz) if tz else fixed.replace(tzinfo=None)
+class _Date(datetime.date):
+    @classmethod
+    def today(cls):
+        return fixed.date()
+datetime.datetime = _Datetime
+datetime.date = _Date
+script = sys.argv.pop(1)
+sys.argv[0] = script
+runpy.run_path(script, run_name='__main__')
+"""
+
+def run_lookup(args: list[str], cwd: Path | None = None, now: str = FIXED_NOW) -> tuple[int, str, str]:
+    """Run voucher_lookup.py under a fixed clock and return (exit_code, stdout, stderr)."""
+    cmd = [sys.executable, '-c', CLOCK_SHIM, now, str(SCRIPTS_DIR / 'voucher_lookup.py')] + args
     result = subprocess.run(cmd, capture_output=True, text=True, cwd=cwd)
     return result.returncode, result.stdout, result.stderr
 
@@ -397,6 +417,30 @@ def test_schema_rejects_unknown_fields():
         assert code == 2, f"Expected 2, got {code}: {err}"
         print("✓ test_schema_rejects_unknown_fields")
 
+def test_lookup_freshness_follows_clock():
+    """Same inputs: fresh evidence/balance at the fixed clock, stale 90 days later."""
+    with tempfile.TemporaryDirectory() as tmp:
+        tmpdir = Path(tmp)
+        config_path, _, _ = setup_test_fixture(tmpdir)
+        args = ['lookup', '--config', str(config_path),
+                '--merchant', 'Kravitz', '--channel', 'physical', '--format', 'json']
+
+        def h1_at(now: str) -> dict:
+            code, out, err = run_lookup(args, cwd=tmpdir, now=now)
+            assert code == 0, f"Expected 0, got {code}: {err}"
+            return next(h for h in json.loads(out)['holdings'] if h['holding_id'] == 'h1')
+
+        fresh = h1_at(FIXED_NOW)
+        assert fresh['outcome'] == 'supported_candidate', f"fresh outcome: {fresh['outcome']}"
+        assert 'evidence_stale' not in fresh['reason_codes']
+        assert 'balance_stale' not in fresh['reason_codes']
+
+        stale = h1_at('2027-01-18T12:00:00+00:00')
+        assert stale['outcome'] == 'conditional', f"stale outcome: {stale['outcome']}"
+        assert 'evidence_stale' in stale['reason_codes']
+        assert 'balance_stale' in stale['reason_codes']
+        print("✓ test_lookup_freshness_follows_clock")
+
 def test_no_network_calls():
     """Verify no network imports in engine."""
     script_path = SCRIPTS_DIR / 'voucher_lookup.py'
@@ -433,6 +477,7 @@ if __name__ == '__main__':
     test_lookup_merchant_id_and_name_conflict()
     test_lookup_show_balances()
     test_lookup_text_format()
+    test_lookup_freshness_follows_clock()
     test_config_path_outside_git()
     test_schema_rejects_unknown_fields()
     test_no_network_calls()

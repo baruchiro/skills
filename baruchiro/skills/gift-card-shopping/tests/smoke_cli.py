@@ -15,7 +15,7 @@ def main():
     regression_tree = ast.parse((PACKAGE / 'tests/test_voucher_lookup.py').read_text())
     count = sum(isinstance(node, ast.FunctionDef) and node.name.startswith('test_')
                 for node in regression_tree.body)
-    assert count == 19, count
+    assert count == 20, count
     print(f'Regression inventory: {count} functions (not executed by smoke)')
     with tempfile.TemporaryDirectory(prefix='voucher-smoke-') as folder:
         target = Path(folder)
