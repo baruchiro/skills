@@ -57,11 +57,11 @@ for spec in "$@"; do
     jq -e --arg repo "$repo_path" '.data.repository.pullRequest | select(.reviewThreads.pageInfo.hasNextPage | not) | .repo = $repo' ||
     { echo "$spec: PR not found or has more than 100 review threads" >&2; exit 1; }
 done | jq -L "$SCRIPT_DIR" --arg marker "$AGENT_MARKER" --argjson links "$(cat "$LINKS_FILE" 2>/dev/null || echo '{}')" -s \
-  'include "classify-pr-status"; map(classifyPr($marker) + {reviewOrder: reviewOrder($links)})' >"$tmp"
+  'include "classify-pr-status"; map(classifyPr($marker) + {reviewOrder: reviewOrder($links), linearReview: (.url | sub("^https://github.com/"; "https://linear.review/"))})' >"$tmp"
 cat "$tmp"
 jq -r --arg now "$(date '+%Y-%m-%d %H:%M')" '
-    "# PR status — \($now)\n\n| # | PR | Status | Turn | Hint | Review order |\n|---|---|---|---|---|---|",
-    (to_entries[] | "| \(.key + 1) | [\(.value.repo)#\(.value.number)](\(.value.url)) \(.value.title | gsub("\\|"; "/")) | `\(.value.status)` | \(.value.next) | \(.value.hint | gsub("\n"; " ") | gsub("\\|"; "/")) | \(.value.reviewOrder | if . == null then "" elif . == "stale" then "stale" else "[open](\(.))" end) |")
+    "# PR status — \($now)\n\n| # | PR | Status | Turn | Hint | Review order | Linear |\n|---|---|---|---|---|---|---|",
+    (to_entries[] | "| \(.key + 1) | [\(.value.repo)#\(.value.number)](\(.value.url)) \(.value.title | gsub("\\|"; "/")) | `\(.value.status)` | \(.value.next) | \(.value.hint | gsub("\n"; " ") | gsub("\\|"; "/")) | \(.value.reviewOrder | if . == null then "" elif . == "stale" then "stale" else "[open](\(.))" end) | [guide](\(.value.linearReview)) |")
   ' "$tmp" > "$STATUS_FILE"
 # Rename into place so a file watcher never reads a half-written file.
 jq --arg now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" '{version: 1, generatedAt: $now, prs: .}' "$tmp" >"$JSON_FILE.tmp"
