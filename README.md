@@ -13,11 +13,13 @@ Personal Claude Code skills marketplace.
 | `baruchiro` | Baruch's personal skills and agents |
 | `pr-review-loop` | Drain review threads on your own PRs and track each PR's status in `pr-status.json`; pair it with the [PR Review Loop VS Code extension](https://marketplace.visualstudio.com/items?itemName=baruchiro.pr-review-loop). See [pr-review-loop/README.md](pr-review-loop/README.md) |
 | `waiting-light` | Flips a Home Assistant `input_boolean` while a session is waiting on you, so a light can signal it. See [waiting-light/README.md](waiting-light/README.md) |
+| `photo-triage` | Local photo culling in chat: dedupe, blur, similar groups, keep/skip decisions and a monthly process. See [photo-triage/README.md](photo-triage/README.md) |
 
 ```
 /plugin install baruchiro@skills
 /plugin install pr-review-loop@skills
 /plugin install waiting-light@skills
+/plugin install photo-triage@skills
 ```
 
 ## Structure

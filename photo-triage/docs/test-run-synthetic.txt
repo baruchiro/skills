@@ -1,0 +1,21 @@
+test_analysis_is_deterministic_and_incremental (test_photocull.TestAnalyze.test_analysis_is_deterministic_and_incremental) ... ok
+test_flat_image_gets_no_hash (test_photocull.TestAnalyze.test_flat_image_gets_no_hash) ... ok
+test_groups (test_photocull.TestAnalyze.test_groups) ... ok
+test_bad_file_does_not_stop_batch (test_photocull.TestIngest.test_bad_file_does_not_stop_batch) ... ok
+test_ingest_counts_dedupe_and_source_untouched (test_photocull.TestIngest.test_ingest_counts_dedupe_and_source_untouched) ... ok
+test_refuses_nested_state_dir (test_photocull.TestIngest.test_refuses_nested_state_dir) ... ok
+test_reingest_is_idempotent_and_touch_does_not_duplicate (test_photocull.TestIngest.test_reingest_is_idempotent_and_touch_does_not_duplicate) ... ok
+test_single_writer_lock (test_photocull.TestIngest.test_single_writer_lock) ... ok
+test_time_priority_and_orientation (test_photocull.TestIngest.test_time_priority_and_orientation) ... ok
+test_backup_roundtrip (test_photocull.TestSession.test_backup_roundtrip) ... ok
+test_conversation_flow_resume_undo_export (test_photocull.TestSession.test_conversation_flow_resume_undo_export) ... ok
+test_decide_is_bound_to_presented_version (test_photocull.TestSession.test_decide_is_bound_to_presented_version) ... ok
+test_decisions_survive_reingest_and_reanalysis (test_photocull.TestSession.test_decisions_survive_reingest_and_reanalysis) ... ok
+test_export_refuses_source_folder (test_photocull.TestSession.test_export_refuses_source_folder) ... ok
+test_projects_are_independent (test_photocull.TestSession.test_projects_are_independent) ... ok
+test_rest_and_errors (test_photocull.TestSession.test_rest_and_errors) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 103.737s
+
+OK
