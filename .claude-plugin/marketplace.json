@@ -26,6 +26,12 @@
       "source": "./waiting-light",
       "description": "Ambient Home Assistant signal when a Claude Code session is waiting on you",
       "version": "0.1.1"
+    },
+    {
+      "name": "photo-triage",
+      "source": "./photo-triage",
+      "description": "Local photo culling in chat with a monthly process: dedupe, blur, similar groups, keep/skip decisions, export",
+      "version": "0.1.0"
     }
   ]
 }
