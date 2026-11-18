@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1
+- Add Modan to the provider list with a dedicated browser procedure for title/author searches, explicit empty results and main-product identity, edition and rendered selling price.
+- Keep purchase controls separate from physical-stock evidence and preserve limits on pagination, exhaustive coverage and checkout claims. No Modan scraper or scheduled search is added.
+- Add offline documentation contract checks and refresh the package manifest and discovery links. Shared plugin versions are unchanged; no release or installation is implied.
+
 ## 0.2.0
 - Added a dedicated e-vrit browser procedure for title/author discovery, exact book/volume identity, separate digital/audio/print formats and the literal `ספריה ציבורית דיגיטלית` marker.
 - Require rendered main-book details, allow asynchronous details to finish loading, distinguish unknown from a missing marker, and keep library-specific account/quota information outside the public package.
