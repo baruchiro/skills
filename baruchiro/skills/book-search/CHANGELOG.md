@@ -1,8 +1,8 @@
+# Changelog
+
 ## Unreleased
 
 - Add read-only Israel Digital / OverDrive / Libby and Storytel catalog procedures, keeping entitlement, language, format and purchase separate. No adapter or account changes.
-
-# Changelog
 
 ## 0.2.0
 - Added a dedicated e-vrit browser procedure for title/author discovery, exact book/volume identity, separate digital/audio/print formats and the literal `ספריה ציבורית דיגיטלית` marker.
