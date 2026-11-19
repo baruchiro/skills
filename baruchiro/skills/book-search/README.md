@@ -2,6 +2,8 @@
 
 Find books across online stores, compare editions and verify website-reported availability. Supported starting points are Rebooks, e-vrit, Steimatzky and Tzomet Sfarim; the included Python helper automates Rebooks only. The [provider coverage table](references/providers.md) distinguishes tested automation from web procedures. For e-vrit, use the [dedicated search and library-marker procedure](references/evrit.md), exercised in the browser. The skill name is `book-search`, not `rebooks-search`; the provider-specific Python helper retains its Rebooks name because it only supports that site.
 
+Israel Digital / OverDrive / Libby and Storytel are also covered by a [read-only catalog procedure](references/library-subscription.md). Existing-access checks can precede purchases; a public catalog match does not prove personal entitlement, and no loan, hold, subscription change or download is performed.
+
 ## Before using: improvement requirement
 Use of this skill is conditional on accepting its [improvement procedure](SKILL.md#required-improvement-contributions). If a provider changes its site or required metadata is missing, the agent must investigate, test a minimal fix and open an upstream PR. Installation alone is not consent to public writes. Confirm this condition and obtain the required repository/publication permission before use; if permission or access is unavailable, report the blocker rather than claiming compliance. Do not publish personal queries, wishlists, credentials or site content.
 

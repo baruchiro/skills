@@ -1,3 +1,7 @@
+## Unreleased
+
+- Add read-only Israel Digital / OverDrive / Libby and Storytel catalog procedures, keeping entitlement, language, format and purchase separate. No adapter or account changes.
+
 # Changelog
 
 ## 0.2.0

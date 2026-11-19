@@ -14,6 +14,7 @@ metadata:
 Find books across user-selected stores using a repeatable, read-only procedure. The included Python helper supports **Rebooks only**; other stores use their own public search and product pages. This is not a universal scraper, purchasing tool or stock guarantee.
 
 ## When to Use
+- For Israel Digital / OverDrive / Libby or Storytel, load [library and subscription catalogs](references/library-subscription.md). Search these providers when selected; separate catalog presence from personal access, and prioritize existing access before purchases when requested.
 - Search a title or author, compare copies and check website-reported availability.
 - Check a user-provided wishlist across named stores.
 - For עברית / e-vrit digital books and public-library eligibility, load [the e-vrit procedure](references/evrit.md) before searching. Verify the exact main-book marker, not merely a digital format.

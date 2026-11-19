@@ -12,3 +12,6 @@ The skill's search/identity/availability procedure is provider-independent. **Su
 e-vrit has a browser-verified procedure, **not an executable adapter**. Steimatzky and Tzomet Sfarim remain named starting points for the generic workflow, **not tested store-specific integrations**. If a page is blocked, search is unavailable, identity metadata is missing or the site changes, report the coverage gap and follow the required improvement-contribution procedure in SKILL.md. Do not replace missing metadata with guesses or claim exhaustive store coverage.
 
 Other user-selected stores can use the same generic procedure when their public pages and access rules permit it. They are not additional tested providers until evidence and regression checks are contributed. Do not invent search endpoints or change the Rebooks helper's host.
+
+| Israel Digital / OverDrive / Libby | https://telaviv.overdrive.com/ | Public title and author search, exact /media/ record | [Read-only library procedure](library-subscription.md); public copies/waits are not personal eligibility. No adapter. |
+| Storytel | https://www.storytel.com/il | Market-specific title and author search, exact product page | [Read-only subscription procedure](library-subscription.md); language/format and catalog presence are separate from plan entitlement. No adapter. |

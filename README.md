@@ -67,3 +67,5 @@ waiting-light/
 | `resolving-pr-review-comments` | Drain unresolved review threads on your own PRs — fetch, reply, resolve, check CI. Writes `pr-status.md` / `pr-status.json`, which the [PR Review Loop VS Code extension](https://marketplace.visualstudio.com/items?itemName=baruchiro.pr-review-loop) shows in a sidebar |
 
 Install steps, requirements and the companion VS Code extension: [pr-review-loop/README.md](pr-review-loop/README.md).
+
+Book-search also covers read-only Israel Digital / Libby and Storytel catalog checks, with access and language caveats. See [book-search](baruchiro/skills/book-search/README.md).
