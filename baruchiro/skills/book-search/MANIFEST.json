@@ -1,17 +1,19 @@
 {
-  "CHANGELOG.md": "30a8405cfae009cc42484bf9661adbbc1ac324589dda98c6496bfd76392d2c14",
+  "CHANGELOG.md": "5106b69159e33fbfecb1819f04e989b64754e6c7ee4d13352dd3cfc03710c17b",
   "LICENSE": "1c05f348c6177914ba3b203919bf47df1b33fcaf8974293ea75a7f0b7ecaa0cb",
-  "README.md": "4b834827ad3bf41da6d818b48d58e89cde7f60ad71407d2ce9716d4687debad5",
-  "SKILL.md": "95e7c9753a601ad57d936136e42be112eac3b584a698b0526de92bd9210c3895",
+  "README.md": "857b3dd7a2ad9f5f0aea73bc07a78a911c199ea4ab9ae148759423ec3db9a7e0",
+  "SKILL.md": "da22888a617d939a2647adadafdb21ede0dede695413e8758d5ffa1d5f906981",
   "references/aliases.example.json": "8a8fb455a9080e2d3ea95d2fc69b7e84dfe0605b2767f62e15edd9dfbc070ffa",
   "references/evrit.md": "51abae852b738551f44e1ec45d645c925edb78ff39d674944a167b60eb7c62f0",
   "references/modan.md": "7d42aee2ca60832d3f08c889eb0ea2707780a575e98f8a471a92beb728445a46",
-  "references/providers.md": "6c637c1665ce5b3e18fcb416c54aba10a38c355d935964ed62696089d3cbff68",
-  "references/site-limits.md": "c6fd9fb3450a874a8e36a07d9edcfa8ae839722f0f502083cfa22fbb1750b08d",
+  "references/providers.md": "aed43297fb8b09e1beffc86df0a3202760a61ab239f2bc22f43ae98989e1024e",
+  "references/site-limits.md": "2d86a8da9c92aa1c05442d220ac037fdcd367f74a81b6c0f604f805e9c1d5366",
+  "references/steimatzky.md": "de4900e1528ce5c6aeb8fa44de537f3c79c9149b017a2f4ded70c9d8da17a2b6",
   "scripts/evrit_search.py": "912a915f685ec373e400e187814e4f795ff1c35c7727e029a8cb6da729a724f3",
   "scripts/rebooks_search.py": "38900a254814f0a444ebe3f81ea2eea49d11db6429940ad3edaa8e3822d895e6",
   "scripts/test_rebooks_search.py": "65fefc869d7ca1c495137926631358db3704656d05b0f602f139d6f16db07777",
   "tests/test_evrit_procedure.py": "c65fcc9a8cfd8bb6af5d5b37bf54f3272d07022c9fef7adaa82189bfab5ed9f3",
   "tests/test_modan_procedure.py": "ad77fe6eef44f0d232ce5c9fcef684d35502b9cc5648ec46e005592eadcd4be2",
-  "tests/test_package.py": "0ab19b410d5a57e47b235ec5b3cf285daa382eec2b788f3085e49d66f166b1ac"
+  "tests/test_package.py": "0ab19b410d5a57e47b235ec5b3cf285daa382eec2b788f3085e49d66f166b1ac",
+  "tests/test_steimatzky_procedure.py": "88b3f546ab9bca0700ed1ec7173e9de1d72f5ba2baf64780c5a1aa64c22285d7"
 }

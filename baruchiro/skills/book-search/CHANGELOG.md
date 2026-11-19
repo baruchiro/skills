@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.2
+- Add Steimatzky to the provider list with a dedicated browser procedure for title/author searches, explicit empty results and main-product identity, print/digital formats and rendered selling price versus catalog price.
+- Keep cart controls separate from physical-stock evidence, record that no edition metadata or explicit stock text was observed, note that online prices are not valid in branches, and document the robots.txt exclusion of the search-results route. No Steimatzky scraper or scheduled search is added.
+- Add offline documentation contract checks and refresh the package manifest and discovery links. Shared plugin versions are unchanged; no release or installation is implied.
+
 ## 0.2.1
 - Add Modan to the provider list with a dedicated browser procedure for title/author searches, explicit empty results and main-product identity, edition and rendered selling price.
 - Keep purchase controls separate from physical-stock evidence and preserve limits on pagination, exhaustive coverage and checkout claims. No Modan scraper or scheduled search is added.

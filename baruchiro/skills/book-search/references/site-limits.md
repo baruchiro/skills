@@ -6,7 +6,12 @@ Check each store's current robots.txt, terms and access restrictions before use.
 
 The small browser check on 2026-11-18 used Modan's visible public search field and main product pages, not a private API. The observed https://www.modan.co.il/robots.txt disallows a number of legacy/internal paths, including advanced-search variants, account/cart/print routes, office files and PDFs. Do not infer that these exclusions authorize bulk access elsewhere. Terms permitting automated crawling were not established. Keep the [Modan procedure](modan.md) to small public checks; recheck current rules and stop on denial or rate limiting. No executable Modan adapter is included.
 
+## Steimatzky
+
+The small browser check on 2026-11-19 used Steimatzky's visible public search field and main product pages, not a private API. The observed https://www.steimatzky.co.il/robots.txt generally allows `/` but disallows the search-results route (`/catalogsearch/result/` and any `?q=` URL) along with promo, wishlist, filter-parameter and admin paths. Treat the search UI as a small manual-style browser check only; do not build an automated adapter or bulk-query the disallowed search route, and do not infer that the general allowance authorizes bulk access elsewhere. Terms permitting automated crawling were not established. Keep the [Steimatzky procedure](steimatzky.md) to small public checks; recheck current rules and stop on denial or rate limiting. No executable Steimatzky adapter is included.
+
 ## Rebooks
+
 
 Rebooks uses a theme-specific HTML parser, not a supported public API. No affiliation is claimed. The observed robots.txt on 2026-10-27 did not disallow the public product search path; it disallows admin, logs and add-to-cart paths. Terms permitting automation were not established. Keep access read-only and small; seek site permission for ongoing/high-volume work.
 
