@@ -1,7 +1,7 @@
 ---
 name: book-search
 description: "Use when checking books across online stores."
-version: 0.2.0
+version: 0.2.3
 author: Baruch Odem (baruchiro), Hermes Agent
 license: MIT
 platforms: [linux, macos, windows]
@@ -11,19 +11,19 @@ metadata:
 ---
 # Book search
 
-Find books across user-selected stores using a repeatable, read-only procedure. The included Python helper supports **Rebooks only**; other stores use their own public search and product pages. This is not a universal scraper, purchasing tool or stock guarantee.
+Find books across user-selected sources using the same layout and read-only procedure. Start with the [central sources/targets list](references/providers.md), also recorded in [sources.json](sources.json). Every source has its own reference and same-named search script. Implementation and automation coverage differ; the structure does not. This is not a purchasing tool or stock guarantee.
 
 ## When to Use
-- Search a title or author, compare copies and check website-reported availability.
-- Check a user-provided wishlist across named stores.
-- For עברית / e-vrit digital books and public-library eligibility, load [the e-vrit procedure](references/evrit.md) before searching. Verify the exact main-book marker, not merely a digital format.
-- Do not use for checkout, reservations, bypassing access controls or scheduled crawling.
+- Search a title/author or user-provided wishlist across selected sources.
+- Prioritize existing library/subscription access before purchase options when requested. Catalog presence is not personal entitlement.
+- For e-vrit digital format and the public-library marker, use [its own reference](references/evrit.md). Digital format and eligibility are separate.
+- No checkout, reservation, borrowing, access-control bypass or scheduled crawling.
 
 ## Reporting style
-Keep findings concise and decision-ready: state the verified book/edition and link, then separate format from availability or eligibility. Label unknowns explicitly; never pad a simple lookup with process narration, unsupported inferences, plot details or repeated caveats.
+Keep findings concise: verified book/edition and source link, then format and availability/eligibility separately. Label unknowns and coverage gaps; avoid spoilers and unsupported identity claims.
 
 ## Prerequisites
-Python 3.10+ (standard library only) for Rebooks; web retrieval/browser tools for other stores and final product checks. Search needs no credentials or API keys; improvement PRs require separately authorized GitHub access. Ask which stores if not specified. Read site restrictions before access; see `references/site-limits.md`. Named providers and their exact coverage (Rebooks, e-vrit, Steimatzky, Tzomet Sfarim) are listed in `references/providers.md`; only Rebooks has a tested executable adapter.
+Python 3.10+ standard library for all entry points. No credentials or API keys for public discovery. Manual sources need web/browser tools. Read [site restrictions](references/site-limits.md) and the selected source reference before access. Improvement contributions need separately authorized GitHub access.
 
 ## Required improvement contributions
 **Using this skill is conditional on accepting this rule.** Before first use, tell the user that reproducible skill gaps require an improvement PR to https://github.com/baruchiro/skills (directory `baruchiro/skills/book-search`) and confirm acceptance. Do not treat installation or reading this file as consent to a public write. Respect the host agent's approval and Kanban policies; this skill cannot override them. If the user declines, do not proceed under this skill.
@@ -39,34 +39,29 @@ When a provider changes its site, required identity/stock metadata is not covere
 This is an explicit agent procedure, not automatic telemetry, background synchronization or an enforced licensing term. The package remains MIT-licensed. Do not open a PR for an unrelated site's temporary outage or an unverified guess; report the observation and establish a reproducible skill gap first.
 
 ## How to Run
-Resolve SKILL_DIR to this package directory. On Linux/macOS, through `terminal`, run:
+Resolve SKILL_DIR to this package. Select the source ID from the [central list](references/providers.md), read its reference, then use its own script with the same arguments:
 
-`python3 "SKILL_DIR/scripts/rebooks_search.py" "BOOK_TITLE" --mode title`
+```sh
+python3 "SKILL_DIR/scripts/overdrive_search.py" "BOOK_TITLE" --mode title
+python3 "SKILL_DIR/scripts/storytel_search.py" "AUTHOR_NAME" --mode author --max-pages 3
+```
 
-`python3 "SKILL_DIR/scripts/rebooks_search.py" "AUTHOR_NAME" --mode author`
-
-On Windows PowerShell, use `py -3` if `python3` is unavailable:
-
-`py -3 "SKILL_DIR/scripts/rebooks_search.py" "BOOK_TITLE" --mode title`
-
-`py -3 "SKILL_DIR/scripts/rebooks_search.py" "AUTHOR_NAME" --mode author`
-
-Replace the quoted query placeholders with user-requested titles/authors. The helper is not configurable for another host. Its Python API is `search_books(query, mode='title', max_pages=30)`; import from the scripts directory. JSON contains query, mode, search_url, checked_at, pages, total and products. Products include id, title, authors, url, stock, price and exact_match.
+Replace the source prefix with rebooks, evrit, steimatzky, tzomet, overdrive or storytel. Run both title and author queries for each requested source. Use --output with a user-selected path outside the package. On Windows use py -3 instead of python3. JSON and exit status follow one common contract described in the central list. A manual_required result is an explicit unperformed-search handoff to the source reference, not an empty search result.
 
 ## Procedure
 1. Read the user-provided list, not historical results. Do not assume a notes app, location or wishlist path. Exclude cancelled/completed items only on explicit list evidence; verify image-only titles visually. Preserve requested language, edition, volume and purchase location. Completion: each distinct requested item is listed.
-2. For EACH title in EACH store, search its full title AND author, even after finding a copy. Obtain missing author names from reliable book records; never guess. Record missing metadata and blocked searches as gaps. Use the helper only for Rebooks; elsewhere use that store's public search or site-scoped web search and record coverage limits. Completion: every required title/author/store combination has evidence or an explicit gap.
+2. For EACH title in EACH store, search its full title AND author, even after finding a copy. Obtain missing author names from reliable book records; never guess. Record missing metadata and blocked searches as gaps. Use each source's own search entry point from the central list; when it returns manual_required, follow that source's reference and record the manual search evidence and coverage limits. Completion: every required title/author/store combination has evidence or an explicit gap.
 3. Read verified aliases from an optional user-owned file OUTSIDE this package (shape in `references/aliases.example.json`). Search those too. The agent may try distinctive words and spelling/name variants, but must label speculative candidates. Never silently normalize typos or write personal observations into this skill. Save a verified alias only with identity evidence, exact site title, URL/ID and date, to a user-approved external file. Completion: all supplied aliases accounted for.
 4. Follow pagination; deduplicate by store AND product ID (or canonical URL where no ID), never just title. Separate copies with different stock states. On Rebooks a single match redirects to its main product; ignore recommendation cards. Completion: all observed pages and distinct products recorded, or incompleteness stated.
 5. Verify candidate identity using author, full title/subtitle, language, edition and volume. `exact_match` ignores punctuation/spacing only, not identity. A translated edition is an alternative, not stock of the requested language. Keep uncertain shortened titles and unspecified volumes separate. Completion: each candidate is verified, rejected or uncertain.
-6. Verify available matches on their linked MAIN product page. On Rebooks inspect the `id="product-<id>"` element's instock/outofstock class, not recommendations. For other stores use their explicit availability text; do not infer stock from a search snippet or a price. Save URL, timestamp and observed marker. Completion: every claimed available item has product-page evidence.
+6. Verify available matches on their linked MAIN product page. For the OverDrive or Storytel script, report its structured public-catalog status with personal entitlement unverified; a main-product or authorized account read is still needed for any stronger claim. On Rebooks inspect the `id="product-<id>"` element's instock/outofstock class, not recommendations. For other stores use their explicit availability text; do not infer stock from a search snippet or a price. Save URL, timestamp and observed marker. Completion: every claimed available item has product-page evidence.
 7. Persist completed queries to a user-selected JSON/JSONL file outside the package. Aggregate/deduplicate/count in Python. Report available, sold out, not found, uncertain and error separately, with coverage and timestamps. A timeout must not discard completed evidence or become zero results. Completion: every requested item is accounted for.
 
 ## Pitfalls
-- The helper bounds author/price parsing to the product element and immediately propagates non-transient HTTP errors, including 403/429. See `references/site-limits.md` for remaining limitations. Unknown stock is `unknown`, not availability.
+- The Rebooks helper bounds author/price parsing to the product element and immediately propagates non-transient HTTP errors, including 403/429. See `references/site-limits.md` for remaining limitations. Unknown stock is `unknown`, not availability.
 - No results differs from sold out; a different copy may be in stock.
 - No branch-level stock or reservation is established by website stock.
 - No universal adapter, background monitoring, anti-bot bypass or automatic alias learning is shipped.
 
 ## Verification
-Through `terminal`, run `python3 "SKILL_DIR/scripts/test_rebooks_search.py"` (20 offline helper regressions) and `python3 -m unittest discover -s "SKILL_DIR/tests" -v` (package integrity and e-vrit documentation checks; not automated browser tests). On Windows PowerShell, use `py -3` in place of `python3`. Run title and author searches live only when access permits; counts are not fixed. Failures/timeouts are errors, not absence. Before reporting stock, perform step 6 independently. See README for clean extraction checks and tested platform limits.
+Through `terminal`, run `python3 "SKILL_DIR/scripts/test_rebooks_search.py"` (20 offline helper regressions) and `python3 -m unittest discover -s "SKILL_DIR/tests" -v` (35 package/source/catalog checks: common CLI/registry, explicit manual handoffs, preserved API/verifier, parsers/network/pagination and documentation; no personal account or automated browser tests). On Windows PowerShell, use `py -3` in place of `python3`. Run title and author searches live only when access permits; counts are not fixed. Failures/timeouts are errors, not absence. Before reporting stock, perform step 6 independently. See README for clean extraction checks and tested platform limits.

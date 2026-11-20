@@ -1,14 +1,16 @@
-# Provider coverage
+# Sources and targets
 
-The skill's search/identity/availability procedure is provider-independent. **Support for the procedure is not a claim that a Python adapter exists or that a store has been live-tested.** Select stores with the user; do not silently query every store.
+The machine-readable [sources.json](../sources.json) is the central source registry. Each target has exactly one source reference and one same-named search entry point. Shared modules beginning with an underscore are internal implementation code, not extra targets. Select sources with the user; do not silently search all sources.
 
-| Provider | Public entry point | Search method | Coverage and verification |
+| Target | Source reference | Search entry point | Capability |
 |---|---|---|---|
-| סיפור חוזר / Rebooks | https://rebooks.org.il/ | Included `scripts/rebooks_search.py` for title and author; web tools for final main-product verification | Executable adapter with 20 offline regression tests; title and author live searches verified in initial 0.1.0 preparation. Results are not a current stock promise. |
-| עברית / e-vrit | https://www.e-vrit.co.il/ | Agent web tools: site title search, author search/page, exact product page | Dedicated [e-vrit procedure](evrit.md), exercised in the browser on 2026-10-27; no executable adapter. Check digital format separately from the exact main-book marker `ספריה ציבורית דיגיטלית`; this does not establish a specific library's licensing, user quota or current lending availability. |
-| סטימצקי / Steimatzky | https://www.steimatzky.co.il/ | Agent web tools: site title search, author search/page, exact product page | Generic web procedure only; no adapter or live search validation shipped. Record the displayed format/edition and explicit stock text; online stock is not branch stock. |
-| צומת ספרים / Tzomet Sfarim | https://www.booknet.co.il/ | Agent web tools: site title search, author search/page, exact product page | Generic web procedure only; no adapter or live search validation shipped. Record edition and explicit stock text; a price or search snippet alone is not availability. |
+| rebooks | [סיפור חוזר / Rebooks](rebooks.md) | [rebooks_search.py](../scripts/rebooks_search.py) | scripted_search |
+| evrit | [עברית / e-vrit](evrit.md) | [evrit_search.py](../scripts/evrit_search.py) | manual_required |
+| steimatzky | [סטימצקי / Steimatzky](steimatzky.md) | [steimatzky_search.py](../scripts/steimatzky_search.py) | manual_required |
+| tzomet | [צומת ספרים / Tzomet Sfarim](tzomet.md) | [tzomet_search.py](../scripts/tzomet_search.py) | manual_required |
+| overdrive | [Israel Digital / OverDrive / Libby](overdrive.md) | [overdrive_search.py](../scripts/overdrive_search.py) | scripted_search |
+| storytel | [Storytel Israel](storytel.md) | [storytel_search.py](../scripts/storytel_search.py) | scripted_search |
 
-e-vrit has a browser-verified procedure, **not an executable adapter**. Steimatzky and Tzomet Sfarim remain named starting points for the generic workflow, **not tested store-specific integrations**. If a page is blocked, search is unavailable, identity metadata is missing or the site changes, report the coverage gap and follow the required improvement-contribution procedure in SKILL.md. Do not replace missing metadata with guesses or claim exhaustive store coverage.
+Every entry point accepts QUERY, --mode title/author, --max-pages 1-10 (default 3) and --output PATH outside the package. Every common result includes provider, query, mode, checked_at, capability, reference, entry_url, status, complete, products, count and errors. Provider-specific identity/availability fields remain distinct. Exit 0 means complete for the stated public query only; exit 2 means incomplete/error/manual_required, never absence. Manual-required entry points do not perform a search.
 
-Other user-selected stores can use the same generic procedure when their public pages and access rules permit it. They are not additional tested providers until evidence and regression checks are contributed. Do not invent search endpoints or change the Rebooks helper's host.
+Rebooks and the two public catalogs have real search implementations. e-vrit, Steimatzky and Tzomet still require the manual reference procedure; a uniform file layout does not imply equal automation. Existing e-vrit verification is partial, not a complete search or library adapter. This change does not incorporate other open provider PRs.

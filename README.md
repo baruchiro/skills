@@ -50,6 +50,7 @@ waiting-light/
 | `pr-walkthrough` | Deep pass: review a PR (or matching PRs across repos) interactively, chunk by chunk |
 | `test-quality-rubric` | Judge whether an existing unit test earns its keep — Delete, Merge or Rewrite |
 | `cr-clone-baruchiro-oss` | Draft a PR review the way Baruch reviews as an open-source maintainer (learned from his own comments in 11 repos). Invoke by name only; never approves, skips dependabot PRs, every comment starts with `:robot:` |
+| [book-search](baruchiro/skills/book-search/README.md) | Uniform per-source reference/search entry points for Rebooks, e-vrit, Steimatzky, Tzomet Sfarim, OverDrive/Libby and Storytel Israel; explicit scripted/manual coverage, editions, availability and personal access |
 | `working-in-a-fork` | Fork workflow: `main` mirrors upstream, `release` is your production branch, every feature goes to both |
 
 ### Agents
