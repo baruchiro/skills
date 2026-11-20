@@ -1,5 +1,16 @@
 # עברית / e-vrit: search, formats and public-library marker
 
+## Search entry point
+
+```sh
+python3 scripts/evrit_search.py "BOOK_TITLE" --mode title
+python3 scripts/evrit_search.py "AUTHOR_NAME" --mode author --max-pages 3
+```
+
+Title/author discovery returns `status=manual_required`, `complete=false`, no network calls and exit 2. Empty products is not evidence of absence. Automated complete search is not implemented. An older partial JSON-LD product/author-URL verification helper is retained as `scripts/evrit_verify.py`; legacy explicit product/search and author-URL calls through evrit_search.py remain compatible. It does not verify the rendered library marker or establish exhaustive discovery. Its older third-party discovery path is not the common title/author adapter and is not newly live-validated here. Prefer the procedure below for discovery and marker checks.
+
+## Manual discovery
+
 This is a read-only procedure using the agent's `web_search`, `web_extract` and browser tools, not a Python adapter or a lending API. Use it when the requested store is עברית, including when checking whether a digital book carries the public-library marker. Search needs no account. Never purchase, redeem a code, reserve or email a library without separate authorization.
 
 ## Search and identify

@@ -177,9 +177,19 @@ def search_books(query,mode='title',max_pages=30):
     results.sort(key=lambda p:(not p['exact_match'],p['title'],p['id']))
     return {'query':query,'mode':mode,'search_url':first,'checked_at':datetime.now(timezone.utc).isoformat(),'pages':len(visited),'total':len(results),'products':results}
 
-if __name__=='__main__':
-    parser=argparse.ArgumentParser()
-    parser.add_argument('query')
-    parser.add_argument('--mode',choices=['title','author'],default='title')
-    args=parser.parse_args()
-    print(json.dumps(search_books(args.query,args.mode),ensure_ascii=False,indent=2))
+def search(query, mode='title', max_pages=3):
+    from _search_common import base_result
+    result = base_result('rebooks', query, mode)
+    try:
+        data = search_books(query, mode, max_pages)
+        result.update(data)
+        result['complete'] = True
+        result['count'] = len(data['products'])
+    except Exception as exc:
+        result['errors'].append(f'{type(exc).__name__}: {exc}')
+    return result
+
+
+if __name__ == '__main__':
+    from _search_common import run_cli
+    raise SystemExit(run_cli('rebooks', search))

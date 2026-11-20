@@ -2,6 +2,9 @@
 
 ## 0.2.3
 
+- Use one sources.json registry and identical per-source reference/search-script layout for all six sources; split OverDrive and Storytel into independent source implementations with shared internal transport only.
+- Add the common CLI/result contract and explicit manual_required/exit-2 handoff for sources without complete automated discovery. Preserve Rebooks API and existing partial e-vrit verification; do not claim new Steimatzky/Tzomet automation or absorb other open PRs.
+
 - Add deterministic read-only public catalog search for Israel Digital / OverDrive / Libby and Storytel Israel with structured JSON, identity/language/format fields, public copy/access markers and unverified personal entitlement.
 - Enforce robots, fixed hosts/paths, bounded pagination, rate spacing and explicit partial/error results; preserve completed records on later failures. No accounts, loans or downloads.
 - Keep all supported sources together, retain existing e-vrit coverage, add synthetic regressions and regenerate the manifest.

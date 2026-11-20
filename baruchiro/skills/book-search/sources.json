@@ -1,0 +1,44 @@
+{
+  "rebooks": {
+    "name": "סיפור חוזר / Rebooks",
+    "entry_url": "https://rebooks.org.il/",
+    "capability": "scripted_search",
+    "script": "scripts/rebooks_search.py",
+    "reference": "references/rebooks.md"
+  },
+  "evrit": {
+    "name": "עברית / e-vrit",
+    "entry_url": "https://www.e-vrit.co.il/",
+    "capability": "manual_required",
+    "script": "scripts/evrit_search.py",
+    "reference": "references/evrit.md"
+  },
+  "steimatzky": {
+    "name": "סטימצקי / Steimatzky",
+    "entry_url": "https://www.steimatzky.co.il/",
+    "capability": "manual_required",
+    "script": "scripts/steimatzky_search.py",
+    "reference": "references/steimatzky.md"
+  },
+  "tzomet": {
+    "name": "צומת ספרים / Tzomet Sfarim",
+    "entry_url": "https://www.booknet.co.il/",
+    "capability": "manual_required",
+    "script": "scripts/tzomet_search.py",
+    "reference": "references/tzomet.md"
+  },
+  "overdrive": {
+    "name": "Israel Digital / OverDrive / Libby",
+    "entry_url": "https://telaviv.overdrive.com/",
+    "capability": "scripted_search",
+    "script": "scripts/overdrive_search.py",
+    "reference": "references/overdrive.md"
+  },
+  "storytel": {
+    "name": "Storytel Israel",
+    "entry_url": "https://www.storytel.com/il",
+    "capability": "scripted_search",
+    "script": "scripts/storytel_search.py",
+    "reference": "references/storytel.md"
+  }
+}

@@ -7,9 +7,14 @@ import unittest
 from urllib.error import HTTPError
 
 ROOT = Path(__file__).resolve().parents[1]
-spec = importlib.util.spec_from_file_location('catalog_search', ROOT / 'scripts/catalog_search.py')
-c = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(c)
+import sys
+sys.path.insert(0, str(ROOT / 'scripts'))
+import _catalog_common as c
+import overdrive_search as od
+import storytel_search as st
+
+def search(provider, *args, **kwargs):
+    return {'overdrive': od.search, 'storytel': st.search}[provider](*args, **kwargs)
 
 
 def od_row(id='123', available=1, owned=2):
@@ -54,7 +59,7 @@ class SequenceReader:
 
 class ParserTests(unittest.TestCase):
     def test_overdrive_main_collection_not_recommendations(self):
-        rows, total = c.parse_overdrive(od_page([od_row()]))
+        rows, total = od.parse_overdrive(od_page([od_row()]))
         self.assertEqual(total, 1)
         self.assertEqual([r['id'] for r in rows], ['123'])
         self.assertEqual(rows[0]['authors'], ['Example Author'])
@@ -65,26 +70,26 @@ class ParserTests(unittest.TestCase):
     def test_overdrive_copies_hold_and_zero_license_are_separate(self):
         for available, owned, expected in [(1, 2, 'available'), (0, 2, 'hold'), (0, 0, 'no_licensed_copies')]:
             with self.subTest(expected=expected):
-                rows, _ = c.parse_overdrive(od_page([od_row(available=available, owned=owned)]))
+                rows, _ = od.parse_overdrive(od_page([od_row(available=available, owned=owned)]))
                 self.assertEqual(rows[0]['public_availability'], expected)
 
     def test_empty_requires_both_explicit_marker_and_empty_collection(self):
-        self.assertEqual(c.parse_overdrive(od_page([])), ([], 0))
+        self.assertEqual(od.parse_overdrive(od_page([])), ([], 0))
         for source in ['Access denied', 'window.OverDrive.titleCollection = [];',
                        'window.OverDrive.titleCollection = {}; We could not find any matches',
                        'window.OverDrive.titleCollection = not-json;']:
             with self.subTest(source=source), self.assertRaises(c.CatalogError):
-                c.parse_overdrive(source)
+                od.parse_overdrive(source)
 
     def test_overdrive_missing_identity_and_inconsistent_counts_fail(self):
         for key, value in [('id', 'not-an-id'), ('creators', None), ('availableCopies', None),
                            ('availableCopies', 5), ('ownedCopies', -1)]:
             row = od_row(); row[key] = value
             with self.subTest(key=key, value=value), self.assertRaises(c.CatalogError):
-                c.parse_overdrive(od_page([row]))
+                od.parse_overdrive(od_page([row]))
 
     def test_storytel_normalization_keeps_language_formats_and_entitlement(self):
-        rows, total, token = c.parse_storytel(json.loads(st_page([st_row()])))
+        rows, total, token = st.parse_storytel(json.loads(st_page([st_row()])))
         self.assertEqual((total, token), (1, None))
         self.assertEqual(rows[0]['languages'], ['en'])
         self.assertEqual(rows[0]['formats'][0]['catalog_access'][0]['type'], 'subscription')
@@ -95,7 +100,7 @@ class ParserTests(unittest.TestCase):
                      {'items': [dict(st_row(), resultType='tag')], 'totalCount': 1},
                      {'items': [dict(st_row(), shareUrl='https://www.storytel.com/us/books/synthetic-123')], 'totalCount': 1}]:
             with self.subTest(data=data), self.assertRaises(c.CatalogError):
-                c.parse_storytel(data)
+                st.parse_storytel(data)
 
     def test_exact_match_does_not_conflate_subtitle_or_author(self):
         row = {'title': 'Synthetic: Book', 'authors': ['Example Author']}
@@ -108,14 +113,14 @@ class ParserTests(unittest.TestCase):
 class SearchTests(unittest.TestCase):
     def test_overdrive_author_url_and_query_encoding(self):
         reader = SequenceReader(od_page([od_row()]))
-        result = c.search('overdrive', 'A & B', 'author', reader=reader)
+        result = search('overdrive', 'A & B', 'author', reader=reader)
         self.assertTrue(result['complete'])
         self.assertIn('creator=A+%26+B', reader.urls[0])
         self.assertNotIn('page=', reader.urls[0])
 
     def test_overdrive_pagination_limit_is_explicit_not_absence(self):
         reader = SequenceReader(od_page([od_row()], total=50))
-        result = c.search('overdrive', 'Book', reader=reader)
+        result = search('overdrive', 'Book', reader=reader)
         self.assertFalse(result['complete'])
         self.assertEqual(result['count'], 1)
         self.assertEqual(len(reader.urls), 1)
@@ -123,7 +128,7 @@ class SearchTests(unittest.TestCase):
 
     def test_storytel_opaque_pagination_and_dedup(self):
         reader = SequenceReader(st_page([st_row('1')], 2, 'opaque/+='), st_page([st_row('1'), st_row('2')], 2))
-        result = c.search('storytel', 'Book', reader=reader)
+        result = search('storytel', 'Book', reader=reader)
         self.assertTrue(result['complete'])
         self.assertEqual(result['count'], 2)
         self.assertIn('page=opaque%2F%2B%3D', reader.urls[1])
@@ -132,7 +137,7 @@ class SearchTests(unittest.TestCase):
 
     def test_storytel_partial_results_survive_network_failure(self):
         reader = SequenceReader(st_page([st_row()], 2, 'next'), HTTPError(ST_URL, 429, 'rate limited', {}, None))
-        result = c.search('storytel', 'Book', reader=reader)
+        result = search('storytel', 'Book', reader=reader)
         self.assertFalse(result['complete'])
         self.assertEqual(result['count'], 1)
         self.assertIn('429', result['errors'][0])
@@ -142,29 +147,29 @@ class SearchTests(unittest.TestCase):
         for pages in [(st_page([st_row()], 2),),
                       (st_page([st_row()], 2, 'a'), st_page([st_row('2')], 2, 'a')),
                       (st_page([st_row()], 2, 'a'), st_page([st_row('2')], 3))]:
-            result = c.search('storytel', 'Book', reader=SequenceReader(*pages))
+            result = search('storytel', 'Book', reader=SequenceReader(*pages))
             self.assertFalse(result['complete'])
             self.assertTrue(result['errors'])
             self.assertGreaterEqual(result['count'], 1)
 
     def test_storytel_page_bound_and_zero_results(self):
-        result = c.search('storytel', 'Book', max_pages=1, reader=SequenceReader(st_page([st_row()], 2, 'next')))
+        result = search('storytel', 'Book', max_pages=1, reader=SequenceReader(st_page([st_row()], 2, 'next')))
         self.assertFalse(result['complete'])
-        result = c.search('storytel', 'No title', reader=SequenceReader(st_page([])))
+        result = search('storytel', 'No title', reader=SequenceReader(st_page([])))
         self.assertTrue(result['complete']); self.assertEqual(result['count'], 0)
 
     def test_robots_denial_does_not_become_no_results(self):
         reader = SequenceReader(c.CatalogError('robots denied'))
-        result = c.search('overdrive', 'Book', reader=reader)
+        result = search('overdrive', 'Book', reader=reader)
         self.assertFalse(result['complete'])
         self.assertNotIn('total', result)
         self.assertTrue(result['errors'])
         self.assertIn('attempted_url', result)
 
     def test_bad_inputs(self):
-        for provider, query, mode, limit in [('elsewhere', 'x', 'title', 1), ('storytel', '', 'title', 1),
+        for provider, query, mode, limit in [('storytel', '', 'title', 1),
                                             ('storytel', 'x', 'title', 50), ('overdrive', 'x', 'other', 1)]:
-            with self.assertRaises(ValueError): c.search(provider, query, mode, limit)
+            with self.assertRaises(ValueError): search(provider, query, mode, limit)
 
 
 ST_URL = 'https://api.storytel.net/search/client/web'
