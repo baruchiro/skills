@@ -51,6 +51,7 @@ waiting-light/
 | `test-quality-rubric` | Judge whether an existing unit test earns its keep — Delete, Merge or Rewrite |
 | `cr-clone-baruchiro-oss` | Draft a PR review the way Baruch reviews as an open-source maintainer (learned from his own comments in 11 repos). Invoke by name only; never approves, skips dependabot PRs, every comment starts with `:robot:` |
 | `working-in-a-fork` | Fork workflow: `main` mirrors upstream, `release` is your production branch, every feature goes to both |
+| `album-photo-selection` | Guide choosing, grouping and sequencing photos for a printed album, one user decision at a time; works without access to the photos. See [its README](baruchiro/skills/album-photo-selection/README.md) |
 
 ### Agents
 
