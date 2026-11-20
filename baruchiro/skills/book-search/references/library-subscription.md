@@ -1,30 +1,44 @@
-# Library and subscription catalogs
+# Scripted library and subscription catalogs
 
-This is a read-only agent web procedure, not an executable adapter. Public catalog presence is not personal access. Keep private card numbers, account details, reading history and queries outside the package.
+Run `scripts/catalog_search.py` with Python 3.10+ standard library. It uses sequential public GET requests without browser navigation, cookies, credentials or JavaScript execution. No personal reading history or queries belong in the package.
 
-## Israel Digital, OverDrive and Libby
+```sh
+python3 scripts/catalog_search.py overdrive "BOOK_TITLE" --mode title --output /tmp/library-title.json
+python3 scripts/catalog_search.py overdrive "AUTHOR_NAME" --mode author --output /tmp/library-author.json
+python3 scripts/catalog_search.py storytel "BOOK_TITLE" --mode title --max-pages 3
+python3 scripts/catalog_search.py storytel "AUTHOR_NAME" --mode author --max-pages 3
+```
 
-Official entry: https://telaviv.overdrive.com/ . Service explanation: https://icl.org.il/ (Libby / Israel Digital). Libby is the reading/listening app for the OverDrive library collection, not a separate store or an e-vrit subscription. A participating library card is required: https://telaviv.overdrive.com/support/card . Do not infer the user's library from their location or from the site's telaviv hostname.
+Use a user-selected output path outside the package. Windows: replace python3 with py -3 and choose a local output path. Run title and author queries separately; use verified Hebrew and original-language names when relevant. Author mode returns book candidates, not an author directory. Text matching is deliberately conservative: `query_exact_match` ignores punctuation/spacing but does not collapse translations, subtitles or volumes. It is not a verified-identity verdict.
 
-1. Open the site's Search or Advanced Search. Search the requested full title and author separately. Search verified Hebrew/English author spellings when needed. A Hebrew author search can miss English-indexed records. Follow pagination and record the signed-in/out state.
-2. Open each exact /media/ record. Verify title, author, language, ebook versus audiobook, translator/narrator, ISBN and edition where shown. Separate formats and languages; series numbers may follow different reading orders.
-3. Record the actual copies and wait text with timestamp. BORROW, PLACE A HOLD, zero copies, and not-available wait time are different states. A record with a hold button can still have zero licensed copies.
-4. Signed-out pages warn that more titles/copies may appear after sign-in. No public match is not proof of absence from the user's full collection. Personal eligibility, quota, current loans and holds remain unverified without the authorized account.
-5. Never click Borrow, Place a Hold, wishlist or history controls as part of discovery. Such actions change the user's account and need separate authority.
+## Israel Digital / OverDrive / Libby
 
-## Storytel
+Public entry: https://telaviv.overdrive.com/ . The script reads `window.OverDrive.titleCollection` from search HTML, not the broader mediaItems/recommendation store. Title mode uses the public search query; author mode uses the creator filter observed in Advanced Search. It parses the explicit result count and keeps language, format, author/narrator/translator, publisher, series, ISBN where supplied, and copy/hold counts separately.
 
-Official Israel entry: https://www.storytel.com/il . Use its Search control, title and author queries, and the resulting Israel-market product links. Wait until search has loaded; an empty result area during loading is not zero results. Search may return tags, series and unrelated fuzzy matches alongside books.
+Libby is the reading/listening app for the OverDrive library collection, not an e-vrit subscription. A participating library card is required: https://telaviv.overdrive.com/support/card . Do not infer the user's library from their location or the telaviv hostname.
 
-1. Search the title and author separately; try verified original-language titles as explicitly labeled alternatives. Follow all observed result pages and format/language filters.
-2. Read the exact product page, not a recommendation card. Verify author, original title/volume, language, audiobook/ebook, narrator, ISBN, duration and market. An English result is not availability of a Hebrew translation.
-3. Record catalog presence separately from the user's subscription entitlement. A trial/signup button on a signed-out public page does not prove inclusion in an existing plan, account region, or successful playback. Do not call it free or included without account evidence.
-4. Do not start a trial, subscribe, change plan, play/download a full book, or change the bookshelf for a catalog check. Login uses the host's secure credential workflow; no secrets in reports.
+Signed-out pages warn that more titles/copies may appear after sign-in. All results are `public_collection_only`, with personal entitlement unverified. A complete public query is not complete coverage of the user's account.
 
-## Compare existing access before purchase
+Copy states: `available` requires availableCopies > 0; `no_licensed_copies` is ownedCopies == 0; `hold` means copies are all lent and isHoldable is true; otherwise `unavailable`. A hold control can coexist with zero licensed copies. No wait-time estimate is invented from hold counts. Missing/inconsistent counts are parser errors, not unavailable books. A title/format in another language is an alternative, not Hebrew availability.
 
-When the user asks to prioritize existing access, rank verified library/subscription routes ahead of paid alternatives. Clearly distinguish confirmed account access, public catalog match with access unverified, hold/wait, no public match, and search error. Keep e-vrit purchases, its public-library marker, the e-vrit reader app, Israel Digital/Libby, and Storytel as separate routes. An e-vrit library marker does not establish an OverDrive license or a subscription. Never infer any subscription from the user merely naming an app.
+Observed robots.txt disallows URLs with page parameters. The script intentionally returns the first page only. If the declared total exceeds returned records, it sets complete=false, retains candidates and states the pagination gap. Narrow the query; never bypass the restriction. Empty requires both the explicit no-match marker and an empty titleCollection. A missing collection, unknown count, bot page or malformed record is an error.
 
-## Validation scope
+## Storytel Israel
 
-Public controls and product metadata were inspected on 2026-11-19. Signed-out OverDrive exposed copies/waits and a fuller-collection-after-login warning; Storytel Israel exposed search and language/format metadata. No personal entitlement, playback or loan was tested. These procedures ship no scraping adapter, scheduled crawler or account mutation.
+Public entry: https://www.storytel.com/il . The website's search client uses GET https://api.storytel.net/search/client/web with query, store=STHP-IL, searchFor=books and includeFormats=abook,ebook. The script uses that same public JSON search, not an authenticated/private API. This is an undocumented website endpoint and may change.
+
+Only book records are accepted; tag/author/series fuzzy matches are not books. It preserves source shareUrl, author, language, audiobook/ebook formats, narrator, series and duration. `availabilityInfo` is labeled catalog_access. A subscription marker is not personal access, quota, region or successful playback. Trial/signup buttons do not prove entitlement. Public catalog presence remains `personal_entitlement=unverified`.
+
+Follow only returned nextPageToken values, sequentially, up to --max-pages (default 3, maximum 10). Tokens are opaque, never invented/incremented. Deduplicate by product ID, reject repeated tokens and count mismatches, retain completed pages after a later failure. English results are not availability of Hebrew translations.
+
+## Output and safety
+
+The JSON includes provider/query/mode, timestamp, source pages, products, count, declared total, complete and errors. Each product separates identity, formats/languages, public availability and unverified personal entitlement. Exit 0 means complete for that public query; exit 2 means partial or failed and must not be reported as zero/absence. Preserve output, report the gap and do not silently drop completed records.
+
+The network layer checks robots.txt for each fixed host, allows a missing robots file (404), and stops on other robots errors. It enforces at least two seconds between host requests or the stated crawl delay, validates same-host redirects and fixed search paths, bounds response bytes and timeouts, and never retries 403/429/errors. No automatic bot bypass. No scheduled crawling. Terms permitting ongoing automation were not established; keep checks small and read-only.
+
+Never click Borrow, Place a Hold, wishlist/history controls, play/download books, start trials or change subscriptions/accounts during discovery. Those are separate authorized actions. No credentials or secrets are accepted by this script.
+
+## Validation
+
+Public scripted title and author searches exercised on 2026-11-20. Offline synthetic regressions cover parsing, explicit-empty versus error, copy states, language/format boundaries, token pagination, deduplication, partial preservation, robots denial, fixed-host redirects and HTTP stop behavior. No personal entitlement, playback or loan test. Public controls/product metadata were separately inspected on 2026-11-19; scripted catalog results do not replace a main-product/account check for stronger claims.

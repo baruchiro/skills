@@ -1,8 +1,8 @@
-# Book search 0.2.0
+# Book search 0.2.3
 
-Find books across online stores, compare editions and verify website-reported availability. Supported starting points are Rebooks, e-vrit, Steimatzky and Tzomet Sfarim; the included Python helper automates Rebooks only. The [provider coverage table](references/providers.md) distinguishes tested automation from web procedures. For e-vrit, use the [dedicated search and library-marker procedure](references/evrit.md), exercised in the browser. The skill name is `book-search`, not `rebooks-search`; the provider-specific Python helper retains its Rebooks name because it only supports that site.
+Find books across online stores, compare editions and verify website-reported availability. Supported sources are Rebooks, e-vrit, Steimatzky, Tzomet Sfarim, Israel Digital / OverDrive / Libby, and Storytel Israel. Scripts search Rebooks and the two public catalogs; e-vrit and the other stores use their documented procedures. The [provider coverage table](references/providers.md) distinguishes tested automation from web procedures. For e-vrit, use the [dedicated search and library-marker procedure](references/evrit.md), exercised in the browser. The skill name is `book-search`, not `rebooks-search`; the provider-specific Python helper retains its Rebooks name because it only supports that site.
 
-Israel Digital / OverDrive / Libby and Storytel are also covered by a [read-only catalog procedure](references/library-subscription.md). Existing-access checks can precede purchases; a public catalog match does not prove personal entitlement, and no loan, hold, subscription change or download is performed.
+Israel Digital / OverDrive / Libby and Storytel use the deterministic [catalog search script](references/library-subscription.md), without browser navigation. Existing-access checks can precede purchases; a public catalog match does not prove personal entitlement, and no loan, hold, subscription change or download is performed.
 
 ## Before using: improvement requirement
 Use of this skill is conditional on accepting its [improvement procedure](SKILL.md#required-improvement-contributions). If a provider changes its site or required metadata is missing, the agent must investigate, test a minimal fix and open an upstream PR. Installation alone is not consent to public writes. Confirm this condition and obtain the required repository/publication permission before use; if permission or access is unavailable, report the blocker rather than claiming compliance. Do not publish personal queries, wishlists, credentials or site content.
@@ -24,7 +24,7 @@ Inside Claude Code:
 /plugin install baruchiro@skills
 ```
 
-This installs the existing **baruchiro plugin bundle**, not a standalone book-search plugin. The shared plugin and marketplace metadata are aligned at version 0.11.0. Restart Claude Code and invoke `/baruchiro:book-search`. To test a reviewed checkout before publication, register that checkout instead, in a disposable Claude configuration:
+This installs the existing **baruchiro plugin bundle**, not a standalone book-search plugin. The shared plugin and marketplace metadata are aligned at version 0.14.1. Restart Claude Code and invoke `/baruchiro:book-search`. To test a reviewed checkout before publication, register that checkout instead, in a disposable Claude configuration:
 
 ```text
 /plugin marketplace add /absolute/path/to/reviewed/skills-checkout
@@ -46,7 +46,7 @@ python3 scripts/test_rebooks_search.py
 python3 -m unittest discover -s tests -v
 ```
 
-Replace placeholders with real queries. Other stores use the agent's web tools and their own public search/product pages, not this helper. No API keys or environment variables are needed. Keep wishlists, output, settings and verified personal aliases outside the package. `references/aliases.example.json` is an optional external-data shape, not a file loaded by the script.
+Replace placeholders with real queries. For the public catalogs run `python3 scripts/catalog_search.py overdrive "BOOK_TITLE" --mode title` or `python3 scripts/catalog_search.py storytel "AUTHOR_NAME" --mode author`. JSON includes partial results and errors; nonzero exit means incomplete, not absence. Other stores use their documented web procedures. No API keys or environment variables are needed. Each catalog run checks robots and pauses at least two seconds between host requests. Catalog JSON can be large for broad authors, so keep queries narrow and save completed output instead of rerunning. Keep wishlists, output, settings and verified personal aliases outside the package. `references/aliases.example.json` is an optional external-data shape, not a file loaded by the script.
 
 On Windows PowerShell, if `python3` is unavailable, use `py -3`:
 
@@ -58,9 +58,9 @@ py -3 -m unittest discover -s tests -v
 ```
 
 ## Checks and limitations
-Python 3.10+ standard library. The helper has 20 offline regression tests; package checks verify the complete file manifest/digests, the fictional alias example shape, relative documentation links, and the e-vrit procedure's discoverability and key distinctions. These documentation checks are not browser automation tests. They do not prove that an agent follows the contribution condition; that procedure is reviewed manually. In an extracted copy, run the commands above and `python3 -m compileall -q scripts tests` (Windows: `py -3 -m compileall -q scripts tests`); do not ship the resulting bytecode.
+Python 3.10+ standard library. The Rebooks helper has 20 offline regression tests; catalog-search tests cover parsers, pagination, partial results and HTTP/robots safety; package checks verify the complete file manifest/digests, the fictional alias example shape, relative documentation links, and the e-vrit procedure's discoverability and key distinctions. These documentation checks are not browser automation tests. They do not prove that an agent follows the contribution condition; that procedure is reviewed manually. In an extracted copy, run the commands above and `python3 -m compileall -q scripts tests` (Windows: `py -3 -m compileall -q scripts tests`); do not ship the resulting bytecode.
 
-Linux tested; macOS/Windows not tested. Read [site limits](references/site-limits.md) before network use. A timestamped observation is not a reservation, branch-level stock or current promise. Broad searches can time out: preserve completed results and report gaps. Only Rebooks has a tested executable adapter. The e-vrit browser procedure was exercised on 2026-10-27 for product/author discovery, digital format and the public-library marker; no executable e-vrit adapter or live validation of the other stores is claimed.
+Linux tested; macOS/Windows not tested. Read [site limits](references/site-limits.md) before network use. A timestamped observation is not a reservation, branch-level stock or current promise. Broad searches can time out: preserve completed results and report gaps. Rebooks and the two public catalogs have tested search scripts. The e-vrit browser procedure was exercised on 2026-10-27 for product/author discovery, digital format and the public-library marker; no executable e-vrit search adapter is claimed. Catalog title/author searches were exercised on 2026-11-20; OverDrive pagination respects robots limits, and no personal entitlement is established.
 
 ## Source and license
 Source and contribution target: [baruchiro/skills](https://github.com/baruchiro/skills), directory `baruchiro/skills/book-search`. PR: https://github.com/baruchiro/skills/pull/2. Derived from MIT-declared rebooks-search 0.1.0; the helper and tests include the fixes described in the changelog. Credits: Baruch Odem (baruchiro), Hermes Agent. MIT applies to this package, not provider data/assets. Package version is not a GitHub Release or evidence of installation.

@@ -50,6 +50,7 @@ waiting-light/
 | `pr-walkthrough` | Deep pass: review a PR (or matching PRs across repos) interactively, chunk by chunk |
 | `test-quality-rubric` | Judge whether an existing unit test earns its keep — Delete, Merge or Rewrite |
 | `cr-clone-baruchiro-oss` | Draft a PR review the way Baruch reviews as an open-source maintainer (learned from his own comments in 11 repos). Invoke by name only; never approves, skips dependabot PRs, every comment starts with `:robot:` |
+| [book-search](baruchiro/skills/book-search/README.md) | Search Rebooks, e-vrit, Steimatzky, Tzomet Sfarim, Israel Digital / OverDrive / Libby, and Storytel Israel; separate editions, catalog availability and personal access |
 | `working-in-a-fork` | Fork workflow: `main` mirrors upstream, `release` is your production branch, every feature goes to both |
 
 ### Agents
@@ -67,5 +68,3 @@ waiting-light/
 | `resolving-pr-review-comments` | Drain unresolved review threads on your own PRs — fetch, reply, resolve, check CI. Writes `pr-status.md` / `pr-status.json`, which the [PR Review Loop VS Code extension](https://marketplace.visualstudio.com/items?itemName=baruchiro.pr-review-loop) shows in a sidebar |
 
 Install steps, requirements and the companion VS Code extension: [pr-review-loop/README.md](pr-review-loop/README.md).
-
-Book-search also covers read-only Israel Digital / Libby and Storytel catalog checks, with access and language caveats. See [book-search](baruchiro/skills/book-search/README.md).

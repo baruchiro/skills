@@ -1,8 +1,11 @@
 # Changelog
 
-## Unreleased
+## 0.2.3
 
-- Add read-only Israel Digital / OverDrive / Libby and Storytel catalog procedures, keeping entitlement, language, format and purchase separate. No adapter or account changes.
+- Add deterministic read-only public catalog search for Israel Digital / OverDrive / Libby and Storytel Israel with structured JSON, identity/language/format fields, public copy/access markers and unverified personal entitlement.
+- Enforce robots, fixed hosts/paths, bounded pagination, rate spacing and explicit partial/error results; preserve completed records on later failures. No accounts, loans or downloads.
+- Keep all supported sources together, retain existing e-vrit coverage, add synthetic regressions and regenerate the manifest.
+- Align shared plugin/marketplace metadata at 0.14.1. This contribution does not merge, tag, install or deploy a release.
 
 ## 0.2.0
 - Added a dedicated e-vrit browser procedure for title/author discovery, exact book/volume identity, separate digital/audio/print formats and the literal `ספריה ציבורית דיגיטלית` marker.
